@@ -77,19 +77,15 @@ QVariant BlocksListModel::data(const QModelIndex &index, int role) const {
     const int row = index.row();
 
     switch (role) {
-    case BlockType:
-        return blocksTypes[row];
-    case BlockContent:
-        return blocksContents[row];
-    default:
-        return QVariant();
+        case BlockType:     return blocksTypes[row];
+        case BlockContent:  return blocksContents[row];
     }
     return QVariant();
 }
 
 QHash<int, QByteArray> BlocksListModel::roleNames() const {
     QHash<int, QByteArray> mapping {
-        // {BlocksRoles::BlockType, "blockType"},
+        {BlocksRoles::BlockType, "blockType"},
         {BlocksRoles::BlockContent, "blockContent"},
     };
     return mapping;

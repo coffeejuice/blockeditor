@@ -18,9 +18,21 @@ qt_add_qml_module(appblockeditor
     VERSION 1.0
     QML_FILES
         Main.qml
-        RESOURCES assets/image0.jpg assets/image1.jpg assets/image2.jpg assets/image3.jpg assets/image4.jpg assets/image5.jpg assets/image6.jpg assets/image7.jpg assets/image8.jpg assets/image9.jpg
-        QML_FILES ContactModel.qml
-        SOURCES blockslistmodel.h blockslistmodel.cpp
+        BlocksListView.qml
+    RESOURCES
+        assets/image0.jpg
+        assets/image1.jpg
+        assets/image2.jpg
+        assets/image3.jpg
+        assets/image4.jpg
+        assets/image5.jpg
+        assets/image6.jpg
+        assets/image7.jpg
+        assets/image8.jpg
+        assets/image9.jpg
+    SOURCES
+        blockslistmodel.h
+        blockslistmodel.cpp
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
