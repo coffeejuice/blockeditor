@@ -1,49 +1,70 @@
-#include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonDocument>
+#include <QVariantMap>
+#include <QVariantList>
 #include <QList>
 #include <QString>
 #include <QByteArray>
 #include "blockslistmodel.h"
 
-static QJsonObject parseObject(const QString &json)
+BlocksListModel::BlocksListModel(QObject *parent)
+    : QAbstractListModel{parent}
 {
-    return QJsonDocument::fromJson(json.toUtf8()).object();
-}
+    blocksTypes = {"documentBegin", "blockBegin", "heat", "upset", "draw", "blockBegin", "heat", "draw", "upset"};
 
-BlocksListModel::BlocksListModel(QObject *parent) : QAbstractListModel{parent} {
-    // blocksTypes = {"documentBegin", "blockBegin", "heat", "upset", "draw", "blockBegin", "heat", "draw", "upset"};
     blocksContents = {
-        parseObject(R"({
-            "type":"documentBegin",
-            "content":{"documentNumber":"100.0342.0","material":"Inconel718","meshDensity":10}})"),
-        parseObject(R"({
-            "type":"beginBlock",
-            "content":{"press":"80MN","dies":"V-dies 320-260","feedFirst":250,"feedOther":200,"speedUpset":20,"speedDraw":80}})"),
-        parseObject(R"({
-            "type":"heat",
-            "content":{"timeUnits":"minutes","typeTimeTemperature":"preheatFurnace, 0, 1000, openDoor, 20, 1000, openDoor, 40, 700, heating, 60, 1000, heating, 360, 1000, soaking, 400, 1000"}})"),
-        parseObject(R"({
-            "type":"upset",
-            "content":"(1000)->800->700")"),
-        parseObject(R"({
-            "type":"draw",
-            "content":"(600)->550->(90)580->(90)535->(90)560->(45)600->(45)610")"),
-        parseObject(R"({
-            "type":"blockBegin",
-            "content":{"press":"40MN","dies":"V-dies 280-240","feedFirst":200,"feedOther":100,"speedUpset":20,"speedDraw":80}})"),
-        parseObject(R"({
-            "type":"draw",
-            "content":"(500)->450->(90)480->(90)435->(90)460->(45)500->(45)510")"),
-        parseObject(R"({
-            "type":"upset",
-            "content":"(1400)->1100->900")"),
+        QVariantMap{
+            {"documentNumber", "100.0342.0"},
+            {"material", "Inconel718"},
+            {"meshDensity", 10}
+        },
+        QVariantMap{
+            {"press", "80MN"},
+            {"dies", "V-dies 320-260"},
+            {"feedFirst", 250},
+            {"feedOther", 200},
+            {"speedUpset", 20},
+            {"speedDraw", 80}
+        },
+        QVariantMap{
+            {"timeUnits", "minutes"},
+            {"typeTimeTemperature", QVariantList{
+                    "preheatFurnace", 0, 1000,
+                    "openDoor", 20, 1000,
+                    "openDoor", 40, 700,
+                    "heating", 60, 1000,
+                    "heating", 360, 1000,
+                    "soaking", 400, 1000
+                }
+            }
+        },
+        QVariantMap{
+            {"operations", "(1000)->800->700"}
+        },
+        QVariantMap{
+            {"operations", "(600)->550->(90)580->(90)535->(90)560->(45)600->(45)610"}
+        },
+        QVariantMap{
+            {"press", "40MN"},
+            {"dies", "V-dies 280-240"},
+            {"feedFirst", 200},
+            {"feedOther", 100},
+            {"speedUpset", 20},
+            {"speedDraw", 80}
+        },
+        QVariantMap{
+            {"operations", "(500)->450->(90)480->(90)435->(90)460->(45)500->(45)510"}
+        },
+        QVariantMap{
+            {"operations", "(1400)->1100->900"}
+        },
     };
 }
 
 int BlocksListModel::rowCount(const QModelIndex &parent) const {
     if (parent.isValid())
         return 0;
-    return blocksContents.length();
+    return blocksTypes.size();
 }
 
 QVariant BlocksListModel::data(const QModelIndex &index, int role) const {
@@ -56,10 +77,12 @@ QVariant BlocksListModel::data(const QModelIndex &index, int role) const {
     const int row = index.row();
 
     switch (role) {
-    // case BlockType:
-    //     return blocksTypes[row];
+    case BlockType:
+        return blocksTypes[row];
     case BlockContent:
         return blocksContents[row];
+    default:
+        return QVariant();
     }
     return QVariant();
 }
@@ -78,56 +101,79 @@ Qt::ItemFlags BlocksListModel::flags(const QModelIndex &index) const {
 
 bool BlocksListModel::setData(const QModelIndex &index, const QVariant &value, int role) {
 
-    if (role != Qt::EditRole || !index.isValid() || value.canConvert<QJsonObject>())
-        return false;
+    // if (!index.isValid()) return false;
+    if (role != Qt::EditRole) return false;
 
     const int row = index.row();
+    if (row < 0 || row >= blocksTypes.size()) return false;
+    if (!value.canConvert<QVariantMap>()) return false;
 
-    const QJsonObject obj = value.value<QJsonObject>();
-    // blocksTypes[row] = obj.value("type").toString();
-    // blocksContents[row] = obj.value("content").toObject();  // store as QJsonObject
-    blocksContents[row] = obj;  // store as QJsonObject
+    const QVariantMap payload = value.toMap();
+
+    // Expect a composite object: { "type": ..., "content": ... }
+    if (!payload.contains("type")) return false;
+    if (!payload.contains("content")) return false;
+
+    blocksTypes[row] = std::move(payload.value("type").toString());
+    blocksContents[row] = std::move(payload.value("content").toMap());
+
     emit dataChanged(index, index);
     return true;
 }
 
 bool BlocksListModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationRow) {
     int newDestination = destinationRow;
-    if (sourceRow < destinationRow) {
+    if (sourceRow < destinationRow)
         newDestination++;
-    }
 
     beginMoveRows(sourceParent, sourceRow, sourceRow, destinationParent, newDestination);
-    blocksContents.move(sourceRow, destinationRow);
-    endMoveRows();
 
+    blocksTypes.move(sourceRow, destinationRow);
+    blocksContents.move(sourceRow, destinationRow);
+
+    endMoveRows();
     return true;
 }
 
 bool BlocksListModel::insertRows(int row, int count, const QModelIndex &parent) {
     beginInsertRows(parent, row, row + count - 1);
-    blocksContents.insert(row, QJsonObject());
+
+    for (int i = 0; i < count; ++i)
+        blocksTypes.insert(row, QString{});
+        blocksContents.insert(row, QVariantMap{});
+
     endInsertRows();
     return true;
 }
 
 bool BlocksListModel::removeRows(int row, int count, const QModelIndex &parent) {
     beginRemoveRows(parent, row, row + count - 1);
-    blocksContents.removeAt(row);
+
+    for (int i = 0; i < count; ++i)
+        blocksTypes.removeAt(row);
+        blocksContents.removeAt(row);
+
     endRemoveRows();
     return true;
 }
 
 bool BlocksListModel::appendRow(int rowNumber) {
     beginInsertRows(QModelIndex(), rowNumber, rowNumber);
-    blocksContents.append(QJsonObject());
+
+    blocksTypes.append(QString{});
+    blocksContents.append(QVariantMap{});
+
     endInsertRows();
     return true;
 }
 
 bool BlocksListModel::clearModel(int rowNumber) {
-    beginRemoveRows(QModelIndex(), 0, rowNumber - 1);
-    blocksContents.remove(0, rowNumber - 1);
+    const int previousRow = rowNumber - 1;
+    beginRemoveRows(QModelIndex(), 0, previousRow);
+
+    blocksTypes.remove(0, previousRow);
+    blocksContents.remove(0, previousRow);
+
     endRemoveRows();
     return true;
 }

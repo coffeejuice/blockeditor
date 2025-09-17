@@ -6,6 +6,7 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import blockeditor
+import QtQml.Models
 
 ApplicationWindow {
     id: window
@@ -91,8 +92,6 @@ ApplicationWindow {
             }
         }
     }
-
-
 
 
     Component {
@@ -184,8 +183,17 @@ ApplicationWindow {
                 id: libraryListView
                 anchors.fill: parent
 
-                model: ContactModel {}
-                delegate: listViewDelegate
+                model: blocksListModel
+                delegate: DelegateChooser {
+                    role: "type" // C++ must expose this role
+
+                    DelegateChoice { roleValue: "documentBegin";    delegate: documentBeginDelegate }
+                    DelegateChoice { roleValue: "blockBegin";       delegate: blockBeginDelegate }
+                    DelegateChoice { roleValue: "heat";             delegate: heatDelegate }
+                    DelegateChoice { roleValue: "upset";            delegate: upsetDelegate }
+                    DelegateChoice { roleValue: "draw";             delegate: drawDelegate }
+                }
+
                 header: Rectangle {
                     width: libraryListView.width
                     height: 50
@@ -210,6 +218,97 @@ ApplicationWindow {
                     border {
                         color: "steelblue"
                         width: 1
+                    }
+                }
+
+                // ====== Reusable item UIs ======
+                Component {
+                    id: documentBeginDelegate
+                    Frame {
+                        property var obj: model.blockContent
+                        padding: 12
+                        Column {
+                            spacing: 6
+                            Label { text: "Document"; font.bold: true }
+                            Label { text: "No: " + (obj?.content?.documentNumber ?? "") }
+                            Label { text: "Material: " + (obj?.content?.material ?? "") }
+                            Label { text: "Mesh density: " + (obj?.content?.meshDensity ?? "") }
+                        }
+                    }
+                }
+
+                Component {
+                    id: blockBeginDelegate
+                    Frame {
+                        padding: 12
+                        Column {
+                            property var obj: model.blockContent
+                            spacing: 6
+                            Label { text: "Begin Block"; font.bold: true }
+                            Label { text: "Press: " + (obj?.content?.press ?? "") }
+                            Label { text: "Dies: " + (obj?.content?.dies ?? "") }
+                            Row {
+                                spacing: 12
+                                Label { text: "Upset: " + (obj?.content?.speedUpset ?? "") }
+                                Label { text: "Draw: " + (obj?.content?.speedDraw ?? "") }
+                            }
+                        }
+                    }
+                }
+
+                Component {
+                    id: heatDelegate
+                    Frame {
+                        padding: 12
+                        property var obj: model.blockContent
+                        Column {
+                            spacing: 6
+                            Label { text: "Heat"; font.bold: true }
+                            Label { text: "Units: " + (obj?.content?.timeUnits ?? "") }
+                            Text {
+                                text: String(obj?.content?.typeTimeTemperature ?? "")
+                                wrapMode: Text.Wrap
+                            }
+                        }
+                    }
+                }
+
+                Component {
+                    id: upsetDelegate
+                    Frame {
+                        padding: 12
+                        property var obj: model.blockContent
+                        Column {
+                            spacing: 6
+                            Label { text: "Upset"; font.bold: true }
+                            Label { text: String(obj?.content ?? "") }
+                        }
+                    }
+                }
+
+                Component {
+                    id: drawDelegate
+                    Frame {
+                        padding: 12
+                        property var obj: model.blockContent
+                        Column {
+                            spacing: 6
+                            Label { text: "Draw"; font.bold: true }
+                            Label { text: String(obj?.content ?? "") }
+                        }
+                    }
+                }
+
+                Component {
+                    id: unknownDelegate
+                    Frame {
+                        padding: 12
+                        property var obj: model.blockContent
+                        Column {
+                            spacing: 6
+                            Label { text: "Unknown type: " + String(dataObj.type) ; font.bold: true }
+                            Text { text: JSON.stringify(dataObj, null, 2); font.family: "monospace" }
+                        }
                     }
                 }
             }

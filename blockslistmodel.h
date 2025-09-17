@@ -11,13 +11,13 @@ class BlocksListModel : public QAbstractListModel
     QML_ELEMENT
     QML_UNCREATABLE("BlocksListModel must be instantinated in C++")
 
-    // QStringList blocksTypes;
-    QList<QJsonObject> blocksContents;
+    QStringList blocksTypes;
+    QList<QVariantMap> blocksContents;
 
 public:
     enum BlocksRoles {
-        // BlockType = Qt::UserRole + 1,
-        BlockContent = Qt::UserRole + 1,
+        BlockType = Qt::UserRole + 1,
+        BlockContent,
     };
 
     explicit BlocksListModel(QObject *parent = nullptr);
