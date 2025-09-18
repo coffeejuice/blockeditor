@@ -34,6 +34,7 @@ Item {
         orientation: ListView.Vertical
 
         model: root.blocksModel
+        // delegate: blocksDelegate
 
         delegate: DelegateChooser {
             role: "blockType" // C++ must expose this role
@@ -189,92 +190,146 @@ Item {
         }
     }
 
+
+    Component {
+        id: blocksDelegate
+
+        Rectangle {
+            id: delegateRect
+
+            required property var blockContent
+            property string imageIndex: delegateRect.blockContent.image
+            property ItemView parentView: ListView.view
+
+            width: parent ? parent.width : 0
+            height: gridView.implicitHeight + 5
+            radius: 5
+            border.color: "gray"
+
+            Rectangle {
+                id: image
+
+                width: 50
+                height: 50
+
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.leftMargin: 5
+                anchors.topMargin: 5
+
+                color: "black"
+
+                Image {
+                    anchors.fill: parent
+
+                    fillMode: Image.PreserveAspectFit
+
+                    source: Qt.resolvedUrl("assets/image" + delegateRect.imageIndex + ".jpg")  // `assets/image${delegateRect.imageIndex}.jpg`)
+                }
+            }
+
+            Rectangle {
+                anchors.left: image.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.leftMargin: 5
+                anchors.topMargin: 5
+                anchors.rightMargin: 5
+
+                height: gridView.implicitHeight
+
+                color: "#333"
+                border.color: Qt.lighter(color, 1.2)
+
+                ListView {
+                    id: gridView
+
+                    anchors.fill: parent
+                    clip: true
+                    // cellWidth: parent.implicitWidth
+                    // cellHeight: 20
+
+                    model: root.blocksModel
+
+                    delegate: DelegateChooser {
+                        role: "blockType" // C++ must expose this role
+
+                        DelegateChoice { roleValue: "documentBegin";    delegate: documentBeginDelegate }
+                        DelegateChoice { roleValue: "blockBegin";       delegate: blockBeginDelegate }
+                        DelegateChoice { roleValue: "heat";             delegate: heatDelegate }
+                        DelegateChoice { roleValue: "upset";            delegate: upsetDelegate }
+                        DelegateChoice { roleValue: "draw";             delegate: drawDelegate }
+                    }
+                }
+            }
+
+            // MouseArea {
+            //     anchors.fill: parent
+            //     hoverEnabled: true
+            //     enabled: root.viewInteraction
+
+            //     onReleased: {
+            //         delegateRect.blocksView.currentIndex = delegateRect.index
+            //         delegateRect.color = "white"
+            //     }
+
+            //     onPressed: {
+            //         delegateRect.color = "gray"
+            //     }
+
+            //     onEntered: {
+            //         delegateRect.color = "lightgray"
+            //     }
+
+            //     onExited: {
+            //         delegateRect.color = "white"
+            //     }
+            // }
+
+            // Keys.onTabPressed: {
+            //     if (blocksView.currentIndex < 0) {
+            //         console.log("Must select an element to insert a new entry")
+            //     } else {
+            //         let index = blocksView.model.index(blocksView.currentIndex, 0)
+            //         blocksView.model.insertRows(blocksView.currentIndex, 1, index.parent)
+            //         blocksView.model.setData(index, "%1, %2, %3, %4"
+            //                                    .arg(delegateRect.firstName).arg(delegateRect.lastName)
+            //                                    .arg(delegateRect.age).arg(delegateRect.phoneNumber))
+            //     }
+            // }
+        }
+    }
+
     // ====== Reusable item UIs ======
     Component {
         id: documentBeginDelegate
-        Rectangle {
-            id: documentBeginFrame
-
+        BlockRow {
             required property var blockContent
-
-            property string documentNumber: documentBeginFrame.blockContent?.documentNumber ?? ""
-            property string material: documentBeginFrame.blockContent?.material ?? ""
-            property string meshDensity: documentBeginFrame.blockContent?.meshDensity ?? ""
-
-            property ItemView parentView: ListView.view
-
-            // property var obj: blockContent
-            width: parent ? parent.width : 0
-            height: docColumn.implicitHeight
-            // radius: 5
-            // color: "gray"
-            // padding: 12
+            innerContent: blockContent
             Column {
-                id: docColumn
-                spacing: 6
                 Label { text: "Document"; font.bold: true }
-                Label { text: "No: " + documentNumber }
-                Label { text: "Material: " + material }
-                Label { text: "Mesh density: " + meshDensity }
-            }
-
-            MouseArea {
-                anchors.fill: documentBeginFrame
-                hoverEnabled: true
-                enabled: root.viewInteraction
-
-                onReleased: {
-                    documentBeginFrame.parentView.currentIndex = documentBeginFrame.index
-                    documentBeginFrame.color = "white"
-                }
-
-                onPressed: {
-                    documentBeginFrame.color = "gray"
-                }
-
-                onEntered: {
-                    documentBeginFrame.color = "lightgray"
-                }
-
-                onExited: {
-                    documentBeginFrame.color = "white"
-                }
-            }
-
-            Keys.onTabPressed: {
-                if (blocksView.currentIndex < 0) {
-                    console.log("Must select an element to insert a new entry")
-                } else {
-                    let index = blocksView.model.index(blocksView.currentIndex, 0)
-                    blocksView.model.insertRows(blocksView.currentIndex, 1, index.parent)
-                    blocksView.model.setData(index, "%1, %2, %3, %4"
-                                               .arg(delegateRect.firstName).arg(delegateRect.lastName)
-                                               .arg(delegateRect.age).arg(delegateRect.phoneNumber))
-                }
+                Label { text: "No: " + (blockContent?.documentNumber ?? "") }
+                Label { text: "Material: " + (blockContent?.material ?? "") }
+                Label { text: "Mesh density: " + (blockContent?.meshDensity ?? "") }
             }
         }
     }
 
     Component {
         id: blockBeginDelegate
-        Rectangle {
-            id: blockBeginFrame
-
+        BlockRow {
             required property var blockContent
-            property ItemView blocksView: ListView.view
-            width: parent ? parent.width : 0
-            height: blockColumn.implicitHeight
-            // padding: 12
+            innerContent: blockContent
             Column {
                 id: blockColumn
                 spacing: 6
                 Label { text: "Begin Block"; font.bold: true }
-                Label { text: "Press: " + (blockBeginFrame.blockContent?.press ?? "") }
-                Label { text: "Dies: " + (blockBeginFrame.blockContent?.dies ?? "") }
+                Label { text: "Press: " + (blockContent?.press ?? "") }
+                Label { text: "Dies: " + (blockContent?.dies ?? "") }
                 Row {
                     spacing: 12
-                    Label { text: "Upset: " + (blockBeginFrame.blockContent?.speedUpset ?? "") }
-                    Label { text: "Draw: " + (blockBeginFrame.blockContent?.speedDraw ?? "") }
+                    Label { text: "Upset: " + (blockContent?.speedUpset ?? "") }
+                    Label { text: "Draw: " + (blockContent?.speedDraw ?? "") }
                 }
             }
         }
@@ -282,22 +337,16 @@ Item {
 
     Component {
         id: heatDelegate
-        Rectangle {
-            id: heatFrame
-
+        BlockRow {
             required property var blockContent
-            property ItemView blocksView: ListView.view
-
-            width: parent ? parent.width : 0
-            height: heatColumn.implicitHeight
-            // padding: 12
+            innerContent: blockContent
             Column {
                 id: heatColumn
                 spacing: 6
                 Label { text: "Heat"; font.bold: true }
-                Label { text: "Units: " + (heatFrame.blockContent?.timeUnits ?? "") }
+                Label { text: "Units: " + (blockContent?.timeUnits ?? "") }
                 Text {
-                    text: String(heatFrame.blockContent?.typeTimeTemperature ?? "")
+                    text: String(blockContent?.typeTimeTemperature ?? "")
                     wrapMode: Text.Wrap
                 }
             }
@@ -306,41 +355,28 @@ Item {
 
     Component {
         id: upsetDelegate
-        Rectangle {
-            id: upsetFrame
-
+        BlockRow {
             required property var blockContent
-            property ItemView blocksView: ListView.view
-
-            property var obj: blockContent
-            width: parent ? parent.width : 0
-            height: upsetColumn.implicitHeight
-            // padding: 12
+            innerContent: blockContent
             Column {
                 id: upsetColumn
                 spacing: 6
                 Label { text: "Upset"; font.bold: true }
-                Label { text: String(upsetFrame.blockContent?.operations ?? "") }
+                Label { text: String(blockContent?.operations ?? "") }
             }
         }
     }
 
     Component {
         id: drawDelegate
-        Rectangle {
-            id: drawFrame
-
+        BlockRow {
             required property var blockContent
-            property ItemView blocksView: ListView.view
-
-            width: parent ? parent.width : 0
-            height: drawColumn.implicitHeight
-            // padding: 12
+            innerContent: blockContent
             Column {
                 id: drawColumn
                 spacing: 6
                 Label { text: "Draw"; font.bold: true }
-                Label { text: String(drawFrame.blockContent?.operations ?? "") }
+                Label { text: String(blockContent?.operations ?? "") }
             }
         }
     }
@@ -362,68 +398,6 @@ Item {
     //         }
     //     }
     // }
-
-    Component {
-        id: blocksDelegate
-
-        Rectangle {
-            id: delegateRect
-
-            required property string firstName
-            required property string lastName
-            required property int age
-            required property string phoneNumber
-            required property int index
-            property ItemView blocksView: ListView.view
-
-            height: 50
-            width: parent ? parent.width : 0
-            border.color: "black"
-
-            Text {
-                anchors.left: parent.left
-                anchors.leftMargin: 5
-                text: qsTr("Name: %1 %2 \nAge: %3 \nPhone: %4"
-                .arg(delegateRect.firstName).arg(delegateRect.lastName)
-                .arg(delegateRect.age).arg(delegateRect.phoneNumber))
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                hoverEnabled: true
-                enabled: root.viewInteraction
-
-                onReleased: {
-                    delegateRect.blocksView.currentIndex = delegateRect.index
-                    delegateRect.color = "white"
-                }
-
-                onPressed: {
-                    delegateRect.color = "gray"
-                }
-
-                onEntered: {
-                    delegateRect.color = "lightgray"
-                }
-
-                onExited: {
-                    delegateRect.color = "white"
-                }
-            }
-
-            Keys.onTabPressed: {
-                if (blocksView.currentIndex < 0) {
-                    console.log("Must select an element to insert a new entry")
-                } else {
-                    let index = blocksView.model.index(blocksView.currentIndex, 0)
-                    blocksView.model.insertRows(blocksView.currentIndex, 1, index.parent)
-                    blocksView.model.setData(index, "%1, %2, %3, %4"
-                                               .arg(delegateRect.firstName).arg(delegateRect.lastName)
-                                               .arg(delegateRect.age).arg(delegateRect.phoneNumber))
-                }
-            }
-        }
-    }
 
     Component {
         id: blocksHeader

@@ -14,11 +14,15 @@ BlocksListModel::BlocksListModel(QObject *parent)
 
     blocksContents = {
         QVariantMap{
+            {"type", "documentBegin"},
+            {"image", 1},
             {"documentNumber", "100.0342.0"},
             {"material", "Inconel718"},
             {"meshDensity", 10}
         },
         QVariantMap{
+            {"type", "blockBegin"},
+            {"image", 2},
             {"press", "80MN"},
             {"dies", "V-dies 320-260"},
             {"feedFirst", 250},
@@ -27,6 +31,8 @@ BlocksListModel::BlocksListModel(QObject *parent)
             {"speedDraw", 80}
         },
         QVariantMap{
+            {"type", "heat"},
+            {"image", 3},
             {"timeUnits", "minutes"},
             {"typeTimeTemperature", QVariantList{
                     "preheatFurnace", 0, 1000,
@@ -39,12 +45,18 @@ BlocksListModel::BlocksListModel(QObject *parent)
             }
         },
         QVariantMap{
+            {"type", "upset"},
+            {"image", 4},
             {"operations", "(1000)->800->700"}
         },
         QVariantMap{
+            {"type", "draw"},
+            {"image", 5},
             {"operations", "(600)->550->(90)580->(90)535->(90)560->(45)600->(45)610"}
         },
         QVariantMap{
+            {"type", "blockBegin"},
+            {"image", 6},
             {"press", "40MN"},
             {"dies", "V-dies 280-240"},
             {"feedFirst", 200},
@@ -53,6 +65,8 @@ BlocksListModel::BlocksListModel(QObject *parent)
             {"speedDraw", 80}
         },
         QVariantMap{
+            {"type", "heat"},
+            {"image", 7},
             {"timeUnits", "minutes"},
             {"typeTimeTemperature", QVariantList{
                                            "preheatFurnace", 0, 1000,
@@ -65,9 +79,13 @@ BlocksListModel::BlocksListModel(QObject *parent)
             }
         },
         QVariantMap{
+            {"type", "draw"},
+            {"image", 8},
             {"operations", "(500)->450->(90)480->(90)435->(90)460->(45)500->(45)510"}
         },
         QVariantMap{
+            {"type", "upset"},
+            {"image", 9},
             {"operations", "(1400)->1100->900"}
         },
     };

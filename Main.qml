@@ -7,7 +7,7 @@ import blockeditor
 
 ApplicationWindow {
     id: window
-    width: 250
+    width: 500
     height: 1000
     visible: true
     title: qsTr("Hello Layouts")
