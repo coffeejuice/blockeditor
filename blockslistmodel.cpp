@@ -53,6 +53,18 @@ BlocksListModel::BlocksListModel(QObject *parent)
             {"speedDraw", 80}
         },
         QVariantMap{
+            {"timeUnits", "minutes"},
+            {"typeTimeTemperature", QVariantList{
+                                           "preheatFurnace", 0, 1000,
+                                           "openDoor", 20, 1000,
+                                           "openDoor", 40, 700,
+                                           "heating", 60, 1000,
+                                           "heating", 360, 1000,
+                                           "soaking", 400, 1000
+                                       }
+            }
+        },
+        QVariantMap{
             {"operations", "(500)->450->(90)480->(90)435->(90)460->(45)500->(45)510"}
         },
         QVariantMap{

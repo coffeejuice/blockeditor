@@ -8,11 +8,27 @@ import blockeditor
 ApplicationWindow {
     id: window
     width: 250
-    height: 1100
+    height: 1000
     visible: true
     title: qsTr("Hello Layouts")
 
     required property BlocksListModel blocksListModel
+
+    header: TextField {
+        id: filterText
+
+        placeholderText: qsTr("Enter a block type name")
+        text: "test" // window.filterModel.lastName
+        font.pointSize: 18
+        onEditingFinished: {
+            focus = false
+            // window.filterModel.lastName = text
+        }
+
+        Keys.onEscapePressed: {
+            focus = false
+        }
+    }
 
     Row {
         anchors.fill: parent

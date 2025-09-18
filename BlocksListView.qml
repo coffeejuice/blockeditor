@@ -192,37 +192,89 @@ Item {
     // ====== Reusable item UIs ======
     Component {
         id: documentBeginDelegate
-        Frame {
-            id: documentBeginId
+        Rectangle {
+            id: documentBeginFrame
+
+            required property var blockContent
+
+            property string documentNumber: documentBeginFrame.blockContent?.documentNumber ?? ""
+            property string material: documentBeginFrame.blockContent?.material ?? ""
+            property string meshDensity: documentBeginFrame.blockContent?.meshDensity ?? ""
+
+            property ItemView parentView: ListView.view
+
             // property var obj: blockContent
             width: parent ? parent.width : 0
-            padding: 12
+            height: docColumn.implicitHeight
+            // radius: 5
+            // color: "gray"
+            // padding: 12
             Column {
+                id: docColumn
                 spacing: 6
                 Label { text: "Document"; font.bold: true }
-                Label { text: "No: " + (list.model?.documentNumber ?? "") }
-                Label { text: "Material: " + (list.model?.material ?? "") }
-                Label { text: "Mesh density: " + (list.model?.meshDensity ?? "") }
+                Label { text: "No: " + documentNumber }
+                Label { text: "Material: " + material }
+                Label { text: "Mesh density: " + meshDensity }
+            }
+
+            MouseArea {
+                anchors.fill: documentBeginFrame
+                hoverEnabled: true
+                enabled: root.viewInteraction
+
+                onReleased: {
+                    documentBeginFrame.parentView.currentIndex = documentBeginFrame.index
+                    documentBeginFrame.color = "white"
+                }
+
+                onPressed: {
+                    documentBeginFrame.color = "gray"
+                }
+
+                onEntered: {
+                    documentBeginFrame.color = "lightgray"
+                }
+
+                onExited: {
+                    documentBeginFrame.color = "white"
+                }
+            }
+
+            Keys.onTabPressed: {
+                if (blocksView.currentIndex < 0) {
+                    console.log("Must select an element to insert a new entry")
+                } else {
+                    let index = blocksView.model.index(blocksView.currentIndex, 0)
+                    blocksView.model.insertRows(blocksView.currentIndex, 1, index.parent)
+                    blocksView.model.setData(index, "%1, %2, %3, %4"
+                                               .arg(delegateRect.firstName).arg(delegateRect.lastName)
+                                               .arg(delegateRect.age).arg(delegateRect.phoneNumber))
+                }
             }
         }
     }
 
     Component {
         id: blockBeginDelegate
-        Frame {
-            id: blockBeginId
-            property var obj: blockContent
+        Rectangle {
+            id: blockBeginFrame
+
+            required property var blockContent
+            property ItemView blocksView: ListView.view
             width: parent ? parent.width : 0
-            padding: 12
+            height: blockColumn.implicitHeight
+            // padding: 12
             Column {
+                id: blockColumn
                 spacing: 6
                 Label { text: "Begin Block"; font.bold: true }
-                Label { text: "Press: " + (blockBeginId.obj?.press ?? "") }
-                Label { text: "Dies: " + (blockBeginId.obj?.dies ?? "") }
+                Label { text: "Press: " + (blockBeginFrame.blockContent?.press ?? "") }
+                Label { text: "Dies: " + (blockBeginFrame.blockContent?.dies ?? "") }
                 Row {
                     spacing: 12
-                    Label { text: "Upset: " + (blockBeginId.obj?.speedUpset ?? "") }
-                    Label { text: "Draw: " + (blockBeginId.obj?.speedDraw ?? "") }
+                    Label { text: "Upset: " + (blockBeginFrame.blockContent?.speedUpset ?? "") }
+                    Label { text: "Draw: " + (blockBeginFrame.blockContent?.speedDraw ?? "") }
                 }
             }
         }
@@ -230,17 +282,22 @@ Item {
 
     Component {
         id: heatDelegate
-        Frame {
-            id: heatId
-            property var obj: blockContent
+        Rectangle {
+            id: heatFrame
+
+            required property var blockContent
+            property ItemView blocksView: ListView.view
+
             width: parent ? parent.width : 0
-            padding: 12
+            height: heatColumn.implicitHeight
+            // padding: 12
             Column {
+                id: heatColumn
                 spacing: 6
                 Label { text: "Heat"; font.bold: true }
-                Label { text: "Units: " + (heatId.obj?.timeUnits ?? "") }
+                Label { text: "Units: " + (heatFrame.blockContent?.timeUnits ?? "") }
                 Text {
-                    text: String(heatId.obj?.typeTimeTemperature ?? "")
+                    text: String(heatFrame.blockContent?.typeTimeTemperature ?? "")
                     wrapMode: Text.Wrap
                 }
             }
@@ -249,47 +306,62 @@ Item {
 
     Component {
         id: upsetDelegate
-        Frame {
-            id: upsetId
+        Rectangle {
+            id: upsetFrame
+
+            required property var blockContent
+            property ItemView blocksView: ListView.view
+
             property var obj: blockContent
             width: parent ? parent.width : 0
-            padding: 12
+            height: upsetColumn.implicitHeight
+            // padding: 12
             Column {
+                id: upsetColumn
                 spacing: 6
                 Label { text: "Upset"; font.bold: true }
-                Label { text: String(upsetId.obj?.operations ?? "") }
+                Label { text: String(upsetFrame.blockContent?.operations ?? "") }
             }
         }
     }
 
     Component {
         id: drawDelegate
-        Frame {
-            id: drawId
-            property var obj: blockContent
+        Rectangle {
+            id: drawFrame
+
+            required property var blockContent
+            property ItemView blocksView: ListView.view
+
             width: parent ? parent.width : 0
-            padding: 12
+            height: drawColumn.implicitHeight
+            // padding: 12
             Column {
+                id: drawColumn
                 spacing: 6
                 Label { text: "Draw"; font.bold: true }
-                Label { text: String(drawId.obj?.operations ?? "") }
+                Label { text: String(drawFrame.blockContent?.operations ?? "") }
             }
         }
     }
 
-    Component {
-        id: unknownDelegate
-        Frame {
-            property var obj: blockContent
-            width: parent ? parent.width : 0
-            padding: 12
-            Column {
-                spacing: 6
-                Label { text: "Unknown type: " + String(obj.type) ; font.bold: true }
-                Text { text: JSON.stringify(obj, null, 2); font.family: "monospace" }
-            }
-        }
-    }
+    // Component {
+    //     id: unknownDelegate
+    //     Frame {
+    //         id: unknownFrame
+
+    //         required property var blockContent
+    //         property ItemView blocksView: ListView.view
+
+    //         width: parent ? parent.width : 0
+    //         padding: 12
+    //         Column {
+    //             spacing: 6
+    //             Label { text: "Unknown type: " + String(unknownFrame.blockContent.type) ; font.bold: true }
+    //             Text { text: JSON.stringify(obj, null, 2); font.family: "monospace" }
+    //         }
+    //     }
+    // }
 
     Component {
         id: blocksDelegate
@@ -354,7 +426,7 @@ Item {
     }
 
     Component {
-        id: contactsHeader
+        id: blocksHeader
 
         Rectangle {
             id: headerRect
@@ -374,7 +446,7 @@ Item {
     }
 
     Component {
-        id: contactsFooter
+        id: blocksFooter
 
         Rectangle {
             id: footerRect
@@ -387,7 +459,7 @@ Item {
     }
 
     Component {
-        id: contactsHighlight
+        id: blocksHighlight
 
         Rectangle {
             id: highlightRect
