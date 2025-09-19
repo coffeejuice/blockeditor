@@ -10,9 +10,9 @@
 BlocksListModel::BlocksListModel(QObject *parent)
     : QAbstractListModel{parent}
 {
-    blocksTypes = {"documentBegin", "blockBegin", "heat", "upset", "draw", "blockBegin", "heat", "draw", "upset"};
+    m_blocksTypes = {"documentBegin", "blockBegin", "heat", "upset", "draw", "blockBegin", "heat", "draw", "upset"};
 
-    blocksContents = {
+    m_blocksContents = {
         QVariantMap{
             {"type", "documentBegin"},
             {"image", 1},
@@ -94,7 +94,7 @@ BlocksListModel::BlocksListModel(QObject *parent)
 int BlocksListModel::rowCount(const QModelIndex &parent) const {
     if (parent.isValid())
         return 0;
-    return blocksTypes.size();
+    return m_blocksTypes.size();
 }
 
 QVariant BlocksListModel::data(const QModelIndex &index, int role) const {
@@ -107,16 +107,16 @@ QVariant BlocksListModel::data(const QModelIndex &index, int role) const {
     const int row = index.row();
 
     switch (role) {
-        case BlockType:     return blocksTypes[row];
-        case BlockContent:  return blocksContents[row];
+        case BlockTypeRole:     return m_blocksTypes[row];
+        case BlockContentRole:  return m_blocksContents[row];
     }
     return QVariant();
 }
 
 QHash<int, QByteArray> BlocksListModel::roleNames() const {
     QHash<int, QByteArray> mapping {
-        {BlocksRoles::BlockType, "blockType"},
-        {BlocksRoles::BlockContent, "blockContent"},
+        {BlocksRoles::BlockTypeRole, "blockType"},
+        {BlocksRoles::BlockContentRole, "blockContent"},
     };
     return mapping;
 }
@@ -131,7 +131,7 @@ bool BlocksListModel::setData(const QModelIndex &index, const QVariant &value, i
     if (role != Qt::EditRole) return false;
 
     const int row = index.row();
-    if (row < 0 || row >= blocksTypes.size()) return false;
+    if (row < 0 || row >= m_blocksTypes.size()) return false;
     if (!value.canConvert<QVariantMap>()) return false;
 
     const QVariantMap payload = value.toMap();
@@ -140,10 +140,14 @@ bool BlocksListModel::setData(const QModelIndex &index, const QVariant &value, i
     if (!payload.contains("type")) return false;
     if (!payload.contains("content")) return false;
 
-    blocksTypes[row] = std::move(payload.value("type").toString());
-    blocksContents[row] = std::move(payload.value("content").toMap());
+    m_blocksTypes[row] = std::move(payload.value("type").toString());
+    m_blocksContents[row] = std::move(payload.value("content").toMap());
 
     emit dataChanged(index, index);
+
+    // Similarly: after insert/remove/moveRows or clear, call updateDocumentBeginCache().
+    updateDocumentBeginCache();
+
     return true;
 }
 
@@ -154,10 +158,13 @@ bool BlocksListModel::moveRows(const QModelIndex &sourceParent, int sourceRow, i
 
     beginMoveRows(sourceParent, sourceRow, sourceRow, destinationParent, newDestination);
 
-    blocksTypes.move(sourceRow, destinationRow);
-    blocksContents.move(sourceRow, destinationRow);
+    m_blocksTypes.move(sourceRow, destinationRow);
+    m_blocksContents.move(sourceRow, destinationRow);
 
     endMoveRows();
+
+    updateDocumentBeginCache();
+
     return true;
 }
 
@@ -165,10 +172,14 @@ bool BlocksListModel::insertRows(int row, int count, const QModelIndex &parent) 
     beginInsertRows(parent, row, row + count - 1);
 
     for (int i = 0; i < count; ++i)
-        blocksTypes.insert(row, QString{});
-        blocksContents.insert(row, QVariantMap{});
+        m_blocksTypes.insert(row, QString{});
+        m_blocksContents.insert(row, QVariantMap{});
 
     endInsertRows();
+
+    // Similarly: after insert/remove/moveRows or clear, call updateDocumentBeginCache().
+    updateDocumentBeginCache();
+
     return true;
 }
 
@@ -176,20 +187,27 @@ bool BlocksListModel::removeRows(int row, int count, const QModelIndex &parent) 
     beginRemoveRows(parent, row, row + count - 1);
 
     for (int i = 0; i < count; ++i)
-        blocksTypes.removeAt(row);
-        blocksContents.removeAt(row);
+        m_blocksTypes.removeAt(row);
+        m_blocksContents.removeAt(row);
 
     endRemoveRows();
+
+    // Similarly: after insert/remove/moveRows or clear, call updateDocumentBeginCache().
+    updateDocumentBeginCache();
+
     return true;
 }
 
 bool BlocksListModel::appendRow(int rowNumber) {
     beginInsertRows(QModelIndex(), rowNumber, rowNumber);
 
-    blocksTypes.append(QString{});
-    blocksContents.append(QVariantMap{});
+    m_blocksTypes.append(QString{});
+    m_blocksContents.append(QVariantMap{});
 
     endInsertRows();
+
+    updateDocumentBeginCache();
+
     return true;
 }
 
@@ -197,9 +215,12 @@ bool BlocksListModel::clearModel(int rowNumber) {
     const int previousRow = rowNumber - 1;
     beginRemoveRows(QModelIndex(), 0, previousRow);
 
-    blocksTypes.remove(0, previousRow);
-    blocksContents.remove(0, previousRow);
+    m_blocksTypes.remove(0, previousRow);
+    m_blocksContents.remove(0, previousRow);
 
     endRemoveRows();
+
+    updateDocumentBeginCache();
+
     return true;
 }

@@ -33,22 +33,27 @@ Item {
         clip: true
         orientation: ListView.Vertical
 
+        property bool isEnab: root.viewInteraction
+        property int lastItem: itemAtIndex(count - 1) ? (itemAtIndex(count - 1).height ? itemAtIndex(count - 1).height : 0) : 0
+
         model: root.blocksModel
-        // delegate: blocksDelegate
 
         delegate: DelegateChooser {
             role: "blockType" // C++ must expose this role
 
-            DelegateChoice { roleValue: "documentBegin";    delegate: documentBeginDelegate }
-            DelegateChoice { roleValue: "blockBegin";       delegate: blockBeginDelegate }
-            DelegateChoice { roleValue: "heat";             delegate: heatDelegate }
-            DelegateChoice { roleValue: "upset";            delegate: upsetDelegate }
-            DelegateChoice { roleValue: "draw";             delegate: drawDelegate }
+            DelegateChoice { roleValue: "documentBegin";    delegate: Item {} }
+            DelegateChoice { roleValue: "blockBegin";       delegate: BlockDelegate_BlockBegin {}}
+            DelegateChoice { roleValue: "heat";             delegate: BlockDelegate_Heat {} }
+            DelegateChoice { roleValue: "upset";            delegate: BlockDelegate_Upset {} }
+            DelegateChoice { roleValue: "draw";             delegate: BlockDelegate_Draw {} }
+            // optional fallback
+            DelegateChoice { delegate: BlockDelegate_Unknown {} }
         }
 
-        header: blocksHeader
-        footer: blocksFooter
+        header: BlockDelegate_Header {}
+        headerPositioning: ListView.OverlayHeader
 
+        footer: BlockDelegate_Footer {}
 
         highlightFollowsCurrentItem: true
         highlight: blocksHighlight
@@ -187,248 +192,6 @@ Item {
                     }
                 }
             }
-        }
-    }
-
-
-    Component {
-        id: blocksDelegate
-
-        Rectangle {
-            id: delegateRect
-
-            required property var blockContent
-            property string imageIndex: delegateRect.blockContent.image
-            property ItemView parentView: ListView.view
-
-            width: parent ? parent.width : 0
-            height: gridView.implicitHeight + 5
-            radius: 5
-            border.color: "gray"
-
-            Rectangle {
-                id: image
-
-                width: 50
-                height: 50
-
-                anchors.left: parent.left
-                anchors.top: parent.top
-                anchors.leftMargin: 5
-                anchors.topMargin: 5
-
-                color: "black"
-
-                Image {
-                    anchors.fill: parent
-
-                    fillMode: Image.PreserveAspectFit
-
-                    source: Qt.resolvedUrl("assets/image" + delegateRect.imageIndex + ".jpg")  // `assets/image${delegateRect.imageIndex}.jpg`)
-                }
-            }
-
-            Rectangle {
-                anchors.left: image.left
-                anchors.right: parent.right
-                anchors.top: parent.top
-                anchors.leftMargin: 5
-                anchors.topMargin: 5
-                anchors.rightMargin: 5
-
-                height: gridView.implicitHeight
-
-                color: "#333"
-                border.color: Qt.lighter(color, 1.2)
-
-                ListView {
-                    id: gridView
-
-                    anchors.fill: parent
-                    clip: true
-                    // cellWidth: parent.implicitWidth
-                    // cellHeight: 20
-
-                    model: root.blocksModel
-
-                    delegate: DelegateChooser {
-                        role: "blockType" // C++ must expose this role
-
-                        DelegateChoice { roleValue: "documentBegin";    delegate: documentBeginDelegate }
-                        DelegateChoice { roleValue: "blockBegin";       delegate: blockBeginDelegate }
-                        DelegateChoice { roleValue: "heat";             delegate: heatDelegate }
-                        DelegateChoice { roleValue: "upset";            delegate: upsetDelegate }
-                        DelegateChoice { roleValue: "draw";             delegate: drawDelegate }
-                    }
-                }
-            }
-
-            // MouseArea {
-            //     anchors.fill: parent
-            //     hoverEnabled: true
-            //     enabled: root.viewInteraction
-
-            //     onReleased: {
-            //         delegateRect.blocksView.currentIndex = delegateRect.index
-            //         delegateRect.color = "white"
-            //     }
-
-            //     onPressed: {
-            //         delegateRect.color = "gray"
-            //     }
-
-            //     onEntered: {
-            //         delegateRect.color = "lightgray"
-            //     }
-
-            //     onExited: {
-            //         delegateRect.color = "white"
-            //     }
-            // }
-
-            // Keys.onTabPressed: {
-            //     if (blocksView.currentIndex < 0) {
-            //         console.log("Must select an element to insert a new entry")
-            //     } else {
-            //         let index = blocksView.model.index(blocksView.currentIndex, 0)
-            //         blocksView.model.insertRows(blocksView.currentIndex, 1, index.parent)
-            //         blocksView.model.setData(index, "%1, %2, %3, %4"
-            //                                    .arg(delegateRect.firstName).arg(delegateRect.lastName)
-            //                                    .arg(delegateRect.age).arg(delegateRect.phoneNumber))
-            //     }
-            // }
-        }
-    }
-
-    // ====== Reusable item UIs ======
-    Component {
-        id: documentBeginDelegate
-        BlockRow {
-            required property var blockContent
-            innerContent: blockContent
-            Column {
-                Label { text: "Document"; font.bold: true }
-                Label { text: "No: " + (blockContent?.documentNumber ?? "") }
-                Label { text: "Material: " + (blockContent?.material ?? "") }
-                Label { text: "Mesh density: " + (blockContent?.meshDensity ?? "") }
-            }
-        }
-    }
-
-    Component {
-        id: blockBeginDelegate
-        BlockRow {
-            required property var blockContent
-            innerContent: blockContent
-            Column {
-                id: blockColumn
-                spacing: 6
-                Label { text: "Begin Block"; font.bold: true }
-                Label { text: "Press: " + (blockContent?.press ?? "") }
-                Label { text: "Dies: " + (blockContent?.dies ?? "") }
-                Row {
-                    spacing: 12
-                    Label { text: "Upset: " + (blockContent?.speedUpset ?? "") }
-                    Label { text: "Draw: " + (blockContent?.speedDraw ?? "") }
-                }
-            }
-        }
-    }
-
-    Component {
-        id: heatDelegate
-        BlockRow {
-            required property var blockContent
-            innerContent: blockContent
-            Column {
-                id: heatColumn
-                spacing: 6
-                Label { text: "Heat"; font.bold: true }
-                Label { text: "Units: " + (blockContent?.timeUnits ?? "") }
-                Text {
-                    text: String(blockContent?.typeTimeTemperature ?? "")
-                    wrapMode: Text.Wrap
-                }
-            }
-        }
-    }
-
-    Component {
-        id: upsetDelegate
-        BlockRow {
-            required property var blockContent
-            innerContent: blockContent
-            Column {
-                id: upsetColumn
-                spacing: 6
-                Label { text: "Upset"; font.bold: true }
-                Label { text: String(blockContent?.operations ?? "") }
-            }
-        }
-    }
-
-    Component {
-        id: drawDelegate
-        BlockRow {
-            required property var blockContent
-            innerContent: blockContent
-            Column {
-                id: drawColumn
-                spacing: 6
-                Label { text: "Draw"; font.bold: true }
-                Label { text: String(blockContent?.operations ?? "") }
-            }
-        }
-    }
-
-    // Component {
-    //     id: unknownDelegate
-    //     Frame {
-    //         id: unknownFrame
-
-    //         required property var blockContent
-    //         property ItemView blocksView: ListView.view
-
-    //         width: parent ? parent.width : 0
-    //         padding: 12
-    //         Column {
-    //             spacing: 6
-    //             Label { text: "Unknown type: " + String(unknownFrame.blockContent.type) ; font.bold: true }
-    //             Text { text: JSON.stringify(obj, null, 2); font.family: "monospace" }
-    //         }
-    //     }
-    // }
-
-    Component {
-        id: blocksHeader
-
-        Rectangle {
-            id: headerRect
-
-            height: 35
-            width: parent.width
-            border.color: "black"
-            color: "mistyrose"
-            z: blocksView.z + 2
-
-            Text {
-                anchors.centerIn: parent
-                text: root.title
-                font.pointSize: 18
-            }
-        }
-    }
-
-    Component {
-        id: blocksFooter
-
-        Rectangle {
-            id: footerRect
-
-            height: 20
-            width: parent.width
-            border.color: "black"
-            color: "mistyrose"
         }
     }
 

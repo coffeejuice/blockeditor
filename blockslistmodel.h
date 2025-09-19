@@ -10,14 +10,16 @@ class BlocksListModel : public QAbstractListModel
     Q_OBJECT
     QML_ELEMENT
     QML_UNCREATABLE("BlocksListModel must be instantinated in C++")
+    Q_PROPERTY(QVariantMap documentBegin READ documentBegin NOTIFY documentBeginChanged)
 
-    QStringList blocksTypes;
-    QList<QVariantMap> blocksContents;
+    QStringList m_blocksTypes;
+    QList<QVariantMap> m_blocksContents;
+    QVariantMap m_documentBegin;  // cached documentBegin value
 
 public:
     enum BlocksRoles {
-        BlockType = Qt::UserRole + 1,
-        BlockContent,
+        BlockTypeRole = Qt::UserRole + 1,
+        BlockContentRole,
     };
 
     explicit BlocksListModel(QObject *parent = nullptr);
@@ -32,6 +34,36 @@ public:
     Q_INVOKABLE bool removeRows(int row, int count, const QModelIndex &parent) override;
     Q_INVOKABLE bool appendRow(int rowNumber);
     Q_INVOKABLE bool clearModel(int rowNumber);
+
+    // 1) Property getter (reactive)
+    QVariantMap documentBegin() const { return m_documentBegin; }
+    // 2) Also expose an on-demand method if you prefer calling it from QML
+    Q_INVOKABLE QVariantMap getDocumentBegin() const { return m_documentBegin; }
+    void beginResetModelWithDocRecalc() { beginResetModel(); }
+    void endResetModelWithDocRecalc()   { endResetModel(); updateDocumentBeginCache(); }
+
+signals:
+    void documentBeginChanged();
+
+protected:
+    // Make sure to call this whenever the model content changes in a way
+    // that might affect the "documentBegin" row (insert/remove/setData/clear/move).
+    void updateDocumentBeginCache() {
+        QVariantMap found;
+        for (int r = 0; r < rowCount(); ++r) {
+            const QModelIndex idx = index(r, 0);
+            const QString type = data(idx, BlockTypeRole).toString();
+            if (type == QStringLiteral("documentBegin")) {
+                found = data(idx, BlockContentRole).toMap();
+                break;
+            }
+        }
+        if (found != m_documentBegin) {
+            m_documentBegin = found;
+            emit documentBeginChanged();
+        }
+    }
+
 };
 
 #endif // BLOCKSLISTMODEL_H
