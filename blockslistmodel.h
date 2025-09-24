@@ -5,6 +5,11 @@
 #include <QObject>
 #include <QQmlEngine>
 
+struct BlockItem {
+    std::string doc_number;
+    QVariantMap content;
+};
+
 class BlocksListModel : public QAbstractListModel
 {
     Q_OBJECT
