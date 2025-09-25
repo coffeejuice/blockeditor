@@ -4,11 +4,8 @@
 #include <QAbstractListModel>
 #include <QObject>
 #include <QQmlEngine>
+#include "blockitem.h"
 
-struct BlockItem {
-    std::string doc_number;
-    QVariantMap content;
-};
 
 class BlocksListModel : public QAbstractListModel
 {
@@ -18,7 +15,7 @@ class BlocksListModel : public QAbstractListModel
     Q_PROPERTY(QVariantMap documentBegin READ documentBegin NOTIFY documentBeginChanged)
 
     QStringList m_blocksTypes;
-    QList<QVariantMap> m_blocksContents;
+    QList<BlockItem> m_blocksContents;
     QVariantMap m_documentBegin;  // cached documentBegin value
 
 public:
