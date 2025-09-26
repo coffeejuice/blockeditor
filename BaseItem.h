@@ -7,9 +7,43 @@
 #include <QVariantMap>
 #include <QString>
 
+struct DocParams
+{
+    std::shared_ptr<std::size_t> index;
+    std::shared_ptr<std::size_t> mesh_density;
+    std::shared_ptr<std::string> number;
+    std::shared_ptr<std::string> material;
+
+    DocParams()
+        : index(nullptr)
+        , mesh_density(nullptr)
+        , number(nullptr)
+        , material(nullptr)
+    {}
+};
+
+struct BlockParams
+{
+    std::shared_ptr<std::string> press;
+    std::shared_ptr<std::string> die;
+    std::shared_ptr<std::string> speed_upset;
+    std::shared_ptr<std::string> speed_draw;
+
+    BlockParams()
+        : press(nullptr)
+        , die(nullptr)
+        , speed_upset(nullptr)
+        , speed_draw(nullptr)
+    {}
+};
+
 // Base item representing a block in the BlocksListModel
-class BlockItem {
+class BaseItem {
 private:
+    DocParams m_doc;
+    BlockParams m_block;
+    bool dirty = true;
+
     int m_doc_index { -1 };           // unique per document
     int m_block_index { -1 };         // unique per block within document
     std::shared_ptr<std::string> m_doc_number; // shared between items of the same document
@@ -25,9 +59,9 @@ protected:
     void assignBlockNamePtr(const std::shared_ptr<std::string> &ptr) { m_block_name = ptr; }
 
 public:
-    BlockItem() = default;
+    BaseItem() = default;
 
-    virtual ~BlockItem() = default;
+    virtual ~BaseItem() = default;
 
     // Accessors (getters for all variables)
     int docIndex() const { return m_doc_index; }
@@ -46,8 +80,12 @@ public:
 };
 
 // DocumentBeginItem: can initialize the shared pointer to m_doc_number
-class DocumentBeginItem : public BlockItem {
+class DocBeginItem : public BaseItem {
 public:
+
+    DocBeginItem()
+        : m_doc(DocParams)
+    {}
 
     // Setter to initialize/replace the shared pointer for document number
     void setDocumentNumberPtr(const std::shared_ptr<std::string> &ptr) {
@@ -62,12 +100,12 @@ public:
 
     // Getter to obtain the shared pointer to the document number
     std::shared_ptr<std::string> documentNumberPtr() const {
-        return BlockItem::docNumberPtr();
+        return BaseItem::docNumberPtr();
     }
 };
 
 // BlockBeginItem: shares the doc number pointer but cannot initialize it here
-class BlockBeginItem : public BlockItem {
+class BlockBeginItem : public BaseItem {
 public:
     // Setter must set a string value (not a pointer) for block name
     void setBlockName(const std::string &name) {
@@ -82,7 +120,7 @@ public:
 };
 
 // HeatItem: shares the doc number pointer but cannot initialize it here
-class HeatItem : public BlockItem {
+class HeatItem : public BaseItem {
 public:
 };
 

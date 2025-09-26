@@ -6,7 +6,7 @@
 #include <QString>
 #include <QByteArray>
 #include "blockslistmodel.h"
-#include "blockitem.h"
+#include "BaseItem.h"
 
 BlocksListModel::BlocksListModel(QObject *parent)
     : QAbstractListModel{parent}
@@ -20,7 +20,7 @@ BlocksListModel::BlocksListModel(QObject *parent)
 
     // Build items with payloads similar to the original QVariantMaps
     {
-        DocumentBeginItem it;
+        DocBeginItem it;
         QVariantMap p;
         p.insert("type", "documentBegin");
         p.insert("image", 1);
@@ -70,7 +70,7 @@ BlocksListModel::BlocksListModel(QObject *parent)
         m_blocksContents.append(it);
     }
     {
-        BlockItem it;
+        BaseItem it;
         it.setBlockNamePtr(currentBlockNamePtr);
         QVariantMap p;
         p.insert("type", "upset");
@@ -80,7 +80,7 @@ BlocksListModel::BlocksListModel(QObject *parent)
         m_blocksContents.append(it);
     }
     {
-        BlockItem it;
+        BaseItem it;
         it.setBlockNamePtr(currentBlockNamePtr);
         QVariantMap p;
         p.insert("type", "draw");
@@ -126,7 +126,7 @@ BlocksListModel::BlocksListModel(QObject *parent)
         m_blocksContents.append(it);
     }
     {
-        BlockItem it;
+        BaseItem it;
         it.setBlockNamePtr(currentBlockNamePtr);
         QVariantMap p;
         p.insert("type", "draw");
@@ -136,7 +136,7 @@ BlocksListModel::BlocksListModel(QObject *parent)
         m_blocksContents.append(it);
     }
     {
-        BlockItem it;
+        BaseItem it;
         it.setBlockNamePtr(currentBlockNamePtr);
         QVariantMap p;
         p.insert("type", "upset");
@@ -232,7 +232,7 @@ bool BlocksListModel::insertRows(int row, int count, const QModelIndex &parent) 
 
     for (int i = 0; i < count; ++i) {
         m_blocksTypes.insert(row, QString{});
-        BlockItem newItem;
+        BaseItem newItem;
         // Link the new item's block name pointer to the previous item's pointer (if any)
         if (row > 0) {
             newItem.setBlockNamePtr(m_blocksContents[row - 1].blockNamePtr());
@@ -275,7 +275,7 @@ bool BlocksListModel::appendRow(int rowNumber) {
 
     m_blocksTypes.append(QString{});
 
-    BlockItem newItem;
+    BaseItem newItem;
     if (!m_blocksContents.isEmpty()) {
         newItem.setBlockNamePtr(m_blocksContents.back().blockNamePtr());
     }

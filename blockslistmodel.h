@@ -1,10 +1,10 @@
-#ifndef BLOCKSLISTMODEL_H
+21#ifndef BLOCKSLISTMODEL_H
 #define BLOCKSLISTMODEL_H
 
 #include <QAbstractListModel>
 #include <QObject>
 #include <QQmlEngine>
-#include "blockitem.h"
+#include "BaseItem.h"
 
 
 class BlocksListModel : public QAbstractListModel
@@ -15,7 +15,7 @@ class BlocksListModel : public QAbstractListModel
     Q_PROPERTY(QVariantMap documentBegin READ documentBegin NOTIFY documentBeginChanged)
 
     QStringList m_blocksTypes;
-    QList<BlockItem> m_blocksContents;
+    QList<BaseItem> m_blocksContents;
     QVariantMap m_documentBegin;  // cached documentBegin value
 
 public:
