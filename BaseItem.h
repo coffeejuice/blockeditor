@@ -3,23 +3,15 @@
 
 #include <memory>
 #include <string>
-#include <vector>
-#include <QVariantMap>
-#include <QString>
 
 struct DocParams
 {
-    std::shared_ptr<std::size_t> index;
-    std::shared_ptr<std::size_t> mesh_density;
-    std::shared_ptr<std::string> number;
-    std::shared_ptr<std::string> material;
+    std::size_t index{0};
+    std::size_t mesh_density{0};
+    std::string number{};
+    std::string material{};
 
-    DocParams()
-        : index(nullptr)
-        , mesh_density(nullptr)
-        , number(nullptr)
-        , material(nullptr)
-    {}
+    DocParams() = default;
 };
 
 struct BlockParams
@@ -37,91 +29,54 @@ struct BlockParams
     {}
 };
 
+using DocParamsPtr = std::shared_ptr<DocParams>;
+
 // Base item representing a block in the BlocksListModel
 class BaseItem {
-private:
-    DocParams m_doc;
-    BlockParams m_block;
-    bool dirty = true;
-
-    int m_doc_index { -1 };           // unique per document
-    int m_block_index { -1 };         // unique per block within document
-    std::shared_ptr<std::string> m_doc_number; // shared between items of the same document
-    std::shared_ptr<std::vector<double>> m_block_curve; // shared curve data per block
-    std::string m_block_type;         // e.g. "documentBegin", "blockBegin", "heat"
-    std::shared_ptr<std::string> m_block_name; // shared name across related items
-
 protected:
-    QVariantMap m_payload;            // used by model to expose data to QML
-    // Allow derived classes (DocumentBeginItem) to initialize the doc number pointer
-    void assignDocNumberPtr(const std::shared_ptr<std::string> &ptr) { m_doc_number = ptr; }
-    // Allow derived classes to initialize/replace the block name pointer
-    void assignBlockNamePtr(const std::shared_ptr<std::string> &ptr) { m_block_name = ptr; }
+    int m_block_index { -1 };         // unique per block within document
+    DocParamsPtr m_doc;
+    BlockParams m_block;
+    bool m_dirty = true;
 
+    QVariantMap m_payload;            // used by the model to expose data to QML
+
+    // Protected constructors used by derived classes to initialize m_doc
+    explicit BaseItem(DocParamsPtr doc) : m_doc(std::move(doc)) {}
+    explicit BaseItem(BlockParams block) : m_block(std::move(block)) {}
 public:
     BaseItem() = default;
-
     virtual ~BaseItem() = default;
 
-    // Accessors (getters for all variables)
-    int docIndex() const { return m_doc_index; }
-    int blockIndex() const { return m_block_index; }
-    const std::shared_ptr<std::string>& docNumberPtr() const { return m_doc_number; }
-    const std::shared_ptr<std::vector<double>>& blockCurvePtr() const { return m_block_curve; }
-    const std::string& blockType() const { return m_block_type; }
-    const std::shared_ptr<std::string>& blockNamePtr() const { return m_block_name; }
+    // m_block_index
+    [[nodiscard]] int blockIndex() const { return m_block_index; }
+    void setBlockIndex(const int index) { m_block_index = index; }
 
-    // Public setter to link/share the block name pointer from model code
-    void setBlockNamePtr(const std::shared_ptr<std::string> &ptr) { m_block_name = ptr; }
+    // m_doc
+    [[nodiscard]] DocParamsPtr docParamsPtr() const { return m_doc; }
+    void setDocParamsPtr(DocParamsPtr docPtr) {m_doc = std::move(docPtr); }
 
-    // Helper to expose to QVariant
-    virtual QVariantMap toVariantMap() const { return m_payload; }
-    void setPayload(const QVariantMap &map) { m_payload = map; }
+    // m_block
+    [[nodiscard]] BlockParams blockParams() const { return m_block; }
+    void setBlockParams(BlockParams blockPtr) { m_block = std::move(blockPtr); }
 };
 
 // DocumentBeginItem: can initialize the shared pointer to m_doc_number
-class DocBeginItem : public BaseItem {
+class DocBeginItem final : public BaseItem {
 public:
-
-    DocBeginItem()
-        : m_doc(DocParams)
-    {}
-
-    // Setter to initialize/replace the shared pointer for document number
-    void setDocumentNumberPtr(const std::shared_ptr<std::string> &ptr) {
-        // Write into the base's private member via protected helper
-        assignDocNumberPtr(ptr);
-        if (ptr) {
-            m_payload.insert("documentNumber", QString::fromStdString(*ptr));
-        } else {
-            m_payload.remove("documentNumber");
-        }
-    }
-
-    // Getter to obtain the shared pointer to the document number
-    std::shared_ptr<std::string> documentNumberPtr() const {
-        return BaseItem::docNumberPtr();
-    }
+    DocBeginItem() : BaseItem(std::make_shared<DocParams>()) {} // Call protected constructor of base class
 };
 
-// BlockBeginItem: shares the doc number pointer but cannot initialize it here
-class BlockBeginItem : public BaseItem {
+class BlockBeginItem final : public BaseItem
+{
 public:
-    // Setter must set a string value (not a pointer) for block name
-    void setBlockName(const std::string &name) {
-        if (!blockNamePtr()) {
-            auto p = std::make_shared<std::string>(name);
-            assignBlockNamePtr(p);
-        } else {
-            *blockNamePtr() = name;
-        }
-        m_payload.insert("blockName", QString::fromStdString(*blockNamePtr()));
-    }
+    BlockBeginItem() : BaseItem(BlockParams()) {} // Call protected constructor of base class
 };
 
-// HeatItem: shares the doc number pointer but cannot initialize it here
-class HeatItem : public BaseItem {
+class HeatItem final : public BaseItem
+{
 public:
+    HeatItem() = default; // Call protected constructor of base class
 };
 
 #endif // BLOCKITEM_H

@@ -1,4 +1,4 @@
-21#ifndef BLOCKSLISTMODEL_H
+#ifndef BLOCKSLISTMODEL_H
 #define BLOCKSLISTMODEL_H
 
 #include <QAbstractListModel>
@@ -7,16 +7,39 @@
 #include "BaseItem.h"
 
 
-class BlocksListModel : public QAbstractListModel
+class BlocksListModel final : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT
     QML_UNCREATABLE("BlocksListModel must be instantinated in C++")
     Q_PROPERTY(QVariantMap documentBegin READ documentBegin NOTIFY documentBeginChanged)
 
-    QStringList m_blocksTypes;
-    QList<BaseItem> m_blocksContents;
+    QStringList m_types;
+    QList<std::unique_ptr<BaseItem>> m_blocks;
     QVariantMap m_documentBegin;  // cached documentBegin value
+
+    void propagateParams(BaseItem* src, BaseItem* dst) const {
+        if (!src || !dst) return; // check of null
+        if (src == dst) return; // check if same object
+
+        // Propagate DocParams shared pointer
+        if (src->docParamsPtr() && !dst->docParamsPtr())
+        {
+            dst->setDocParamsPtr( src->docParamsPtr() );
+        }
+
+
+    };
+
+    void propagateParamsTillEnd(const int startIndex)
+    {
+        if (startIndex < 0 || startIndex >= m_blocks.size() -1) return;
+
+        for (auto it = m_blocks.begin() + strartIndex; it != m_blocks.end(); ++it)
+        {
+            propagateParams(m_blocks[i], m_blocks[i + 1]);
+        }
+    };
 
 public:
     enum BlocksRoles {
