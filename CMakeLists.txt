@@ -22,8 +22,9 @@ qt_add_qml_module(appblockeditor
         Main.qml
         BlocksListView.qml
         BlockDelegateLayout.qml
-        BlockDelegate_BlockBegin.qml
         BlockDelegate_Header.qml
+        BlockDelegate_Document.qml
+        BlockDelegate_Block.qml
         BlockDelegate_Heat.qml
         BlockDelegate_Upset.qml
         BlockDelegate_Draw.qml
@@ -42,6 +43,8 @@ qt_add_qml_module(appblockeditor
         assets/image9.jpg
         assets/blocktype_unknown_yellow_inkspace.svg
         assets/fire.svg
+        assets/red_danger.svg
+        assets/check_list_bw.svg
     SOURCES
         blockslistmodel.h
         blockslistmodel.cpp

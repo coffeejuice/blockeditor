@@ -40,7 +40,7 @@ public:
     // 2) Also expose an on-demand method if you prefer calling it from QML
     Q_INVOKABLE QVariantMap getDocumentBegin() const { return m_documentBegin; }
     void beginResetModelWithDocRecalc() { beginResetModel(); }
-    void endResetModelWithDocRecalc()   { endResetModel(); updateDocumentBeginCache(); }
+    void endResetModelWithDocRecalc()   { endResetModel(); updateDocumentCache(); }
 
 signals:
     void documentBeginChanged();
@@ -48,7 +48,7 @@ signals:
 protected:
     // Make sure to call this whenever the model content changes in a way
     // that might affect the "documentBegin" row (insert/remove/setData/clear/move).
-    void updateDocumentBeginCache() {
+    void updateDocumentCache() {
         QVariantMap found;
         for (int r = 0; r < rowCount(); ++r) {
             const QModelIndex idx = index(r, 0);
@@ -63,7 +63,6 @@ protected:
             emit documentBeginChanged();
         }
     }
-
 };
 
 #endif // BLOCKSLISTMODEL_H

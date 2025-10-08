@@ -198,7 +198,7 @@ bool BlocksListModel::setData(const QModelIndex &index, const QVariant &value, i
 
     emit dataChanged(index, index);
 
-    updateDocumentBeginCache();
+    updateDocumentCache();
 
     return true;
 }
@@ -215,7 +215,7 @@ bool BlocksListModel::moveRows(const QModelIndex &sourceParent, int sourceRow, i
 
     endMoveRows();
 
-    updateDocumentBeginCache();
+    updateDocumentCache();
 
     return true;
 }
@@ -238,7 +238,7 @@ bool BlocksListModel::insertRows(int row, int count, const QModelIndex &parent) 
 
     endInsertRows();
 
-    updateDocumentBeginCache();
+    updateDocumentCache();
 
     return true;
 }
@@ -253,7 +253,7 @@ bool BlocksListModel::removeRows(int row, int count, const QModelIndex &parent) 
 
     endRemoveRows();
 
-    updateDocumentBeginCache();
+    updateDocumentCache();
 
     return true;
 }
@@ -271,7 +271,7 @@ bool BlocksListModel::appendRow(int rowNumber) {
 
     endInsertRows();
 
-    updateDocumentBeginCache();
+    updateDocumentCache();
 
     return true;
 }
@@ -285,7 +285,7 @@ bool BlocksListModel::clearModel(int rowNumber) {
 
     endRemoveRows();
 
-    updateDocumentBeginCache();
+    updateDocumentCache();
 
     return true;
 }

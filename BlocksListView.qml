@@ -41,8 +41,8 @@ Item {
         delegate: DelegateChooser {
             role: "blockType" // C++ must expose this role
 
-            DelegateChoice { roleValue: "documentBegin";    delegate: Item {} }
-            DelegateChoice { roleValue: "blockBegin";       delegate: BlockDelegate_BlockBegin {}}
+            DelegateChoice { roleValue: "document";    delegate: BlockDelegate_Document {} }
+            DelegateChoice { roleValue: "block";       delegate: BlockDelegate_Block {}}
             DelegateChoice { roleValue: "heat";             delegate: BlockDelegate_Heat {} }
             DelegateChoice { roleValue: "upset";            delegate: BlockDelegate_Upset {} }
             DelegateChoice { roleValue: "draw";             delegate: BlockDelegate_Draw {} }

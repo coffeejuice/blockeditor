@@ -14,7 +14,6 @@ Rectangle {
     Rectangle {
         id: contourRect
 
-
         width: parent.width - 10
         height: Math.max(left.height, rightColumn.height) + 10
         y: 5

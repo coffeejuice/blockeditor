@@ -6,23 +6,23 @@
 #include <QString>
 #include <QByteArray>
 #include "blockslistmodel.h"
-#include "BaseItem.h"
+// #include "BaseItem.h"
 
 BlocksListModel::BlocksListModel(QObject *parent)
     : QAbstractListModel{parent}
 {
-    m_types = {"documentBegin", "blockBegin", "heat", "upset", "draw", "blockBegin", "heat", "draw", "upset"};
+    m_types = {"document", "block", "heat", "upset", "draw", "block", "heat", "draw", "upset"};
 
     m_blocks = {
         QVariantMap{
-            {"type", "documentBegin"},
+            {"type", "document"},
             {"image", 1},
             {"documentNumber", "100.0342.0"},
             {"material", "Inconel718"},
             {"meshDensity", 10}
         },
         QVariantMap{
-            {"type", "blockBegin"},
+            {"type", "block"},
             {"image", 2},
             {"press", "80MN"},
             {"dies", "V-dies 320-260"},
@@ -56,7 +56,7 @@ BlocksListModel::BlocksListModel(QObject *parent)
             {"operations", "(600)->550->(90)580->(90)535->(90)560->(45)600->(45)610"}
         },
         QVariantMap{
-            {"type", "blockBegin"},
+            {"type", "block"},
             {"image", 6},
             {"press", "40MN"},
             {"dies", "V-dies 280-240"},
@@ -147,7 +147,7 @@ bool BlocksListModel::setData(const QModelIndex &index, const QVariant &value, i
     emit dataChanged(index, index);
 
     // Similarly: after insert/remove/moveRows or clear, call updateDocumentBeginCache().
-    updateDocumentBeginCache();
+    updateDocumentCache();
 
     return true;
 }
@@ -164,7 +164,7 @@ bool BlocksListModel::moveRows(const QModelIndex &sourceParent, int sourceRow, i
 
     endMoveRows();
 
-    updateDocumentBeginCache();
+    updateDocumentCache();
 
     return true;
 }
@@ -180,7 +180,7 @@ bool BlocksListModel::insertRows(int row, int count, const QModelIndex &parent) 
     endInsertRows();
 
     // Similarly: after insert/remove/moveRows or clear, call updateDocumentBeginCache().
-    updateDocumentBeginCache();
+    updateDocumentCache();
 
     return true;
 }
@@ -196,7 +196,7 @@ bool BlocksListModel::removeRows(int row, int count, const QModelIndex &parent) 
     endRemoveRows();
 
     // Similarly: after insert/remove/moveRows or clear, call updateDocumentBeginCache().
-    updateDocumentBeginCache();
+    updateDocumentCache();
 
     return true;
 }
@@ -209,7 +209,7 @@ bool BlocksListModel::appendRow(int rowNumber) {
 
     endInsertRows();
 
-    updateDocumentBeginCache();
+    updateDocumentCache();
 
     return true;
 }
@@ -223,7 +223,7 @@ bool BlocksListModel::clearModel(int rowNumber) {
 
     endRemoveRows();
 
-    updateDocumentBeginCache();
+    updateDocumentCache();
 
     return true;
 }

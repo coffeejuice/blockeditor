@@ -18,7 +18,7 @@ ApplicationWindow {
         id: filterText
 
         placeholderText: qsTr("Enter a block type name")
-        text: "test" // window.filterModel.lastName
+        text: "" // window.filterModel.lastName
         font.pointSize: 18
         onEditingFinished: {
             focus = false
