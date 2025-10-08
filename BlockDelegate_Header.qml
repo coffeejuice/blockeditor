@@ -30,7 +30,8 @@ Rectangle {
             Text { text: "Test Text object" }
             Text { text: doc && doc.documentNumber ? "Doc No: " + doc.documentNumber : "" }
             Text { text: doc && doc.material ? "Material: " + doc.material : "" }
-            Text { text: doc && doc.meshDensity ? "Mesh: " + doc.meshDensity : "" }
+            Text { text: doc && doc.meshDensity ? "Mesh elements across width: " + doc.meshDensity : "" }
+            Text { text: doc && doc.weight ? "Weight [kg]: " + doc.weight : "" }
         }
     }
 }

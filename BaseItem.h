@@ -9,7 +9,25 @@ struct DocParams
     std::size_t index{0};
     std::size_t mesh_density{0};
     std::string number{};
-    std::string material{};
+    // std::string material{};
+
+    std::string name;
+    std::string mesh_elements;
+    std::size_t material_id;
+    std::string weight;
+
+    std::string _sql_query_formula = "name VARCHAR(255) DEFAULT NULL, "
+                         "mesh_elements SMALLINT NOT NULL DEFAULT 10, "
+                         "material_id SMALLINT NOT NULL DEFAULT 1,"
+                         "FOREIGN KEY (material_id) REFERENCES material(material_id) ON DELETE SET DEFAULT,"
+                         "weight NUMERIC(9, 3) DEFAULT NULL";
+
+    // Foreign key helper methods (stubs)
+    static std::string material(int16_t material_id)
+    {
+        // TODO: Call corresponding class or service to resolve 'material_name' by 'material_id'.
+        return {};
+    }
 
     DocParams() = default;
 };

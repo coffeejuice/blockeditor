@@ -1,7 +1,7 @@
 #include <QJsonObject>
-// #include <QJsonDocument>
+#include <QJsonDocument>
 #include <QVariantMap>
-// #include <QVariantList>
+#include <QVariantList>
 #include <QList>
 #include <QString>
 #include <QByteArray>
@@ -13,138 +13,89 @@ BlocksListModel::BlocksListModel(QObject *parent)
 {
     m_types = {"documentBegin", "blockBegin", "heat", "upset", "draw", "blockBegin", "heat", "draw", "upset"};
 
-    // Prepare shared pointers that could be shared among items
-    // auto docNumber = std::make_shared<std::string>("100.0342.0");
-    // auto curve = std::make_shared<std::vector<double>>();
-    // std::shared_ptr<std::string> currentBlockNamePtr; // will be shared among items in the same block
-
-    {
-        auto it = std::make_unique<DocBeginItem>();
-        // QVariantMap p;
-        // p.insert("type", "documentBegin");
-        // p.insert("image", 1);
-        // p.insert("documentNumber", QString::fromStdString(*docNumber));
-        // p.insert("material", "Inconel718");
-        // p.insert("meshDensity", 10);
-        // it->setDocumentNumberPtr(docNumber);
-        // it->setBlockNamePtr(currentBlockNamePtr);
-        // it->setPayload(p);
-        m_blocks.append(std::move(it));
-    }
-    {
-        auto it = std::make_unique<BlockBeginItem>();
-        // it->setBlockNamePtr(currentBlockNamePtr);
-        // QVariantMap p;
-        // p.insert("type", "blockBegin");
-        // p.insert("image", 2);
-        // p.insert("press", "80MN");
-        // p.insert("dies", "V-dies 320-260");
-        // p.insert("feedFirst", 250);
-        // p.insert("feedOther", 200);
-        // p.insert("speedUpset", 20);
-        // p.insert("speedDraw", 80);
-        // it->setPayload(p);
-        m_blocks.append(std::move(it));
-        // currentBlockNamePtr = m_blocks.back()->blockNamePtr();
-    }
-    {
-        auto it = std::make_unique<HeatItem>();
-        // it->setBlockNamePtr(currentBlockNamePtr);
-        // QVariantMap p;
-        // p.insert("type", "heat");
-        // p.insert("image", 3);
-        // p.insert("timeUnits", "minutes");
-        // p.insert("typeTimeTemperature", QVariantList{
-        //     "preheatFurnace", 0, 1000,
-        //     "openDoor", 20, 1000,
-        //     "openDoor", 40, 700,
-        //     "heating", 60, 1000,
-        //     "heating", 360, 1000,
-        //     "soaking", 400, 1000
-        // });
-        // it->setPayload(p);
-        m_blocks.append(std::move(it));
-    }
-    {
-        auto it = std::make_unique<BaseItem>();
-        // it->setBlockNamePtr(currentBlockNamePtr);
-        // QVariantMap p;
-        // p.insert("type", "upset");
-        // p.insert("image", 4);
-        // p.insert("operations", "(1000)->800->700");
-        // it->setPayload(p);
-        m_blocks.append(std::move(it));
-    }
-    {
-        auto it = std::make_unique<BaseItem>();
-        // it->setBlockNamePtr(currentBlockNamePtr);
-        // QVariantMap p;
-        // p.insert("type", "draw");
-        // p.insert("image", 5);
-        // p.insert("operations", "(600)->550->(90)580->(90)535->(90)560->(45)600->(45)610");
-        // it->setPayload(p);
-        m_blocks.append(std::move(it));
-    }
-    {
-        auto it = std::make_unique<BlockBeginItem>();
-        // it->setBlockNamePtr(currentBlockNamePtr);
-        // QVariantMap p;
-        // p.insert("type", "blockBegin");
-        // p.insert("image", 6);
-        // p.insert("press", "40MN");
-        // p.insert("dies", "V-dies 280-240");
-        // p.insert("feedFirst", 200);
-        // p.insert("feedOther", 100);
-        // p.insert("speedUpset", 20);
-        // p.insert("speedDraw", 80);
-        // it->setPayload(p);
-        m_blocks.append(std::move(it));
-        // currentBlockNamePtr = m_blocks.back()->blockNamePtr();
-    }
-    {
-        auto it = std::make_unique<HeatItem>();
-        // it->setBlockNamePtr(currentBlockNamePtr);
-        // QVariantMap p;
-        // p.insert("type", "heat");
-        // p.insert("image", 7);
-        // p.insert("timeUnits", "minutes");
-        // p.insert("typeTimeTemperature", QVariantList{
-        //     "preheatFurnace", 0, 1000,
-        //     "openDoor", 20, 1000,
-        //     "openDoor", 40, 700,
-        //     "heating", 60, 1000,
-        //     "heating", 360, 1000,
-        //     "soaking", 400, 1000
-        // });
-        // it->setPayload(p);
-        m_blocks.append(std::move(it));
-    }
-    {
-        auto it = std::make_unique<BaseItem>();
-        // it->setBlockNamePtr(currentBlockNamePtr);
-        // QVariantMap p;
-        // p.insert("type", "draw");
-        // p.insert("image", 8);
-        // p.insert("operations", "(500)->450->(90)480->(90)435->(90)460->(45)500->(45)510");
-        // it->setPayload(p);
-        m_blocks.append(std::move(it));
-    }
-    {
-        auto it = std::make_unique<BaseItem>();
-        // it->setBlockNamePtr(currentBlockNamePtr);
-        // QVariantMap p;
-        // p.insert("type", "upset");
-        // p.insert("image", 9);
-        // p.insert("operations", "(1400)->1100->900");
-        // it->setPayload(p);
-        m_blocks.append(std::move(it));
-    }
+    m_blocks = {
+        QVariantMap{
+            {"type", "documentBegin"},
+            {"image", 1},
+            {"documentNumber", "100.0342.0"},
+            {"material", "Inconel718"},
+            {"meshDensity", 10}
+        },
+        QVariantMap{
+            {"type", "blockBegin"},
+            {"image", 2},
+            {"press", "80MN"},
+            {"dies", "V-dies 320-260"},
+            {"feedFirst", 250},
+            {"feedOther", 200},
+            {"speedUpset", 20},
+            {"speedDraw", 80}
+        },
+        QVariantMap{
+            {"type", "heat"},
+            {"image", 3},
+            {"timeUnits", "minutes"},
+            {"typeTimeTemperature", QVariantList{
+                    "preheatFurnace", 0, 1000,
+                    "openDoor", 20, 1000,
+                    "openDoor", 40, 700,
+                    "heating", 60, 1000,
+                    "heating", 360, 1000,
+                    "soaking", 400, 1000
+                }
+            }
+        },
+        QVariantMap{
+            {"type", "upset"},
+            {"image", 4},
+            {"operations", "(1000)->800->700"}
+        },
+        QVariantMap{
+            {"type", "draw"},
+            {"image", 5},
+            {"operations", "(600)->550->(90)580->(90)535->(90)560->(45)600->(45)610"}
+        },
+        QVariantMap{
+            {"type", "blockBegin"},
+            {"image", 6},
+            {"press", "40MN"},
+            {"dies", "V-dies 280-240"},
+            {"feedFirst", 200},
+            {"feedOther", 100},
+            {"speedUpset", 20},
+            {"speedDraw", 80}
+        },
+        QVariantMap{
+            {"type", "heat"},
+            {"image", 7},
+            {"timeUnits", "minutes"},
+            {"typeTimeTemperature", QVariantList{
+                                           "preheatFurnace", 0, 1000,
+                                           "openDoor", 20, 1000,
+                                           "openDoor", 40, 700,
+                                           "heating", 60, 1000,
+                                           "heating", 360, 1000,
+                                           "soaking", 400, 1000
+                                       }
+            }
+        },
+        QVariantMap{
+            {"type", "draw"},
+            {"image", 8},
+            {"operations", "(500)->450->(90)480->(90)435->(90)460->(45)500->(45)510"}
+        },
+        QVariantMap{
+            {"type", "upset"},
+            {"image", 9},
+            {"operations", "(1400)->1100->900"}
+        },
+    };
 }
 
 int BlocksListModel::rowCount(const QModelIndex &parent) const {
     if (parent.isValid())
         return 0;
-    return static_cast<int>(m_types.size());
+    return m_types.size();
 }
 
 QVariant BlocksListModel::data(const QModelIndex &index, int role) const {
@@ -158,7 +109,7 @@ QVariant BlocksListModel::data(const QModelIndex &index, int role) const {
 
     switch (role) {
         case BlockTypeRole:     return m_types[row];
-        // case BlockContentRole:  return m_blocks[row]->toVariantMap();
+        case BlockContentRole:  return m_blocks[row];
     }
     return QVariant();
 }
@@ -191,13 +142,11 @@ bool BlocksListModel::setData(const QModelIndex &index, const QVariant &value, i
     if (!payload.contains("content")) return false;
 
     m_types[row] = std::move(payload.value("type").toString());
-    {
-        auto map = payload.value("content").toMap();
-        // m_blocks[row]->setPayload(map);
-    }
+    m_blocks[row] = std::move(payload.value("content").toMap());
 
     emit dataChanged(index, index);
 
+    // Similarly: after insert/remove/moveRows or clear, call updateDocumentBeginCache().
     updateDocumentBeginCache();
 
     return true;
@@ -225,19 +174,12 @@ bool BlocksListModel::insertRows(int row, int count, const QModelIndex &parent) 
 
     for (int i = 0; i < count; ++i) {
         m_types.insert(row, QString{});
-        auto newItem = std::make_unique<BaseItem>();
-        if (row > 0) {
-            // newItem->setBlockNamePtr(m_blocks[row - 1]->blockNamePtr());
-        }
-        m_blocks.insert(row, std::move(newItem));
-        if (row + 1 < m_blocks.size()) {
-            // m_blocks[row + 1]->setBlockNamePtr(m_blocks[row]->blockNamePtr());
-        }
-        ++row;
+        m_blocks.insert(row, QVariantMap{});
     }
 
     endInsertRows();
 
+    // Similarly: after insert/remove/moveRows or clear, call updateDocumentBeginCache().
     updateDocumentBeginCache();
 
     return true;
@@ -253,6 +195,7 @@ bool BlocksListModel::removeRows(int row, int count, const QModelIndex &parent) 
 
     endRemoveRows();
 
+    // Similarly: after insert/remove/moveRows or clear, call updateDocumentBeginCache().
     updateDocumentBeginCache();
 
     return true;
@@ -262,12 +205,7 @@ bool BlocksListModel::appendRow(int rowNumber) {
     beginInsertRows(QModelIndex(), rowNumber, rowNumber);
 
     m_types.append(QString{});
-
-    auto newItem = std::make_unique<BaseItem>();
-    if (!m_blocks.isEmpty()) {
-        // newItem->setBlockNamePtr(m_blocks.back()->blockNamePtr());
-    }
-    m_blocks.append(std::move(newItem));
+    m_blocks.append(QVariantMap{});
 
     endInsertRows();
 
