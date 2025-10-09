@@ -1,104 +1,62 @@
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QJsonArray>
 #include <QVariantMap>
 #include <QVariantList>
 #include <QList>
 #include <QString>
 #include <QByteArray>
+#include <QFile>
 #include "blockslistmodel.h"
-// #include "BaseItem.h"
 
-BlocksListModel::BlocksListModel(QObject *parent)
-    : QAbstractListModel{parent}
-{
-    m_types = {"document", "block", "heat", "upset", "draw", "block", "heat", "draw", "upset"};
-
-    m_blocks = {
-        QVariantMap{
-            {"type", "document"},
-            {"image", 1},
-            {"documentNumber", "100.0342.0"},
-            {"material", "Inconel718"},
-            {"meshDensity", 10}
-        },
-        QVariantMap{
-            {"type", "block"},
-            {"image", 2},
-            {"press", "80MN"},
-            {"dies", "V-dies 320-260"},
-            {"feedFirst", 250},
-            {"feedOther", 200},
-            {"speedUpset", 20},
-            {"speedDraw", 80}
-        },
-        QVariantMap{
-            {"type", "heat"},
-            {"image", 3},
-            {"timeUnits", "minutes"},
-            {"typeTimeTemperature", QVariantList{
-                    "preheatFurnace", 0, 1000,
-                    "openDoor", 20, 1000,
-                    "openDoor", 40, 700,
-                    "heating", 60, 1000,
-                    "heating", 360, 1000,
-                    "soaking", 400, 1000
-                }
-            }
-        },
-        QVariantMap{
-            {"type", "upset"},
-            {"image", 4},
-            {"operations", "(1000)->800->700"}
-        },
-        QVariantMap{
-            {"type", "draw"},
-            {"image", 5},
-            {"operations", "(600)->550->(90)580->(90)535->(90)560->(45)600->(45)610"}
-        },
-        QVariantMap{
-            {"type", "block"},
-            {"image", 6},
-            {"press", "40MN"},
-            {"dies", "V-dies 280-240"},
-            {"feedFirst", 200},
-            {"feedOther", 100},
-            {"speedUpset", 20},
-            {"speedDraw", 80}
-        },
-        QVariantMap{
-            {"type", "heat"},
-            {"image", 7},
-            {"timeUnits", "minutes"},
-            {"typeTimeTemperature", QVariantList{
-                                           "preheatFurnace", 0, 1000,
-                                           "openDoor", 20, 1000,
-                                           "openDoor", 40, 700,
-                                           "heating", 60, 1000,
-                                           "heating", 360, 1000,
-                                           "soaking", 400, 1000
-                                       }
-            }
-        },
-        QVariantMap{
-            {"type", "draw"},
-            {"image", 8},
-            {"operations", "(500)->450->(90)480->(90)435->(90)460->(45)500->(45)510"}
-        },
-        QVariantMap{
-            {"type", "upset"},
-            {"image", 9},
-            {"operations", "(1400)->1100->900"}
-        },
-    };
+// Seed
+BlocksListModel::BlocksListModel(QObject* parent) : QAbstractListModel(parent) {
+    m_blocks.push_back(Document{"100.0342.0","Inconel718","10","2000"});
+    m_blocks.push_back(
+        Block{
+            "1.1",
+            "80MN",
+            "Custom",
+            "Top 650",
+            "Bottom 650",
+            "<--",
+            "200",
+            "130",
+            "200",
+            "20",
+            "40",
+            "40"
+        }
+    );
+    m_blocks.push_back(Heat{"1.2", "min", "0, 1000, 350, 1000"});
+    m_blocks.push_back(Upset{ "(1000)->800->700" });
+    m_blocks.push_back(Draw{ "(600)->550->(90)580->(90)535->(90)560->(45)600->(45)610" });
+    m_blocks.push_back(
+    Block{
+        "2.1",
+        "45MN",
+        "Custom",
+        "Top 550",
+        "Bottom 550",
+        "<--",
+        "180",
+        "120",
+        "180",
+        "30",
+        "50",
+        "50"
+        }
+    );
+    m_blocks.push_back(Heat{"2.2", "min", "0, 980, 250, 980"});
+    m_blocks.push_back(Draw{ "(500)->450->(90)480->(90)435->(90)460->(45)500->(45)510" });
+    m_blocks.push_back(Upset{ "(1400)->1100->900" });
 }
 
 int BlocksListModel::rowCount(const QModelIndex &parent) const {
-    if (parent.isValid())
-        return 0;
-    return m_types.size();
+    return parent.isValid() ? 0 : m_types.size();
 }
 
-QVariant BlocksListModel::data(const QModelIndex &index, int role) const {
+QVariant BlocksListModel::data(const QModelIndex &index, const int role) const {
     if (!checkIndex(index, CheckIndexOption::IndexIsValid))
         return QVariant();
 
@@ -108,16 +66,16 @@ QVariant BlocksListModel::data(const QModelIndex &index, int role) const {
     const int row = index.row();
 
     switch (role) {
-        case BlockTypeRole:     return m_types[row];
-        case BlockContentRole:  return m_blocks[row];
+        case TypeRole:     return m_types[row];
+        case ContentRole:  return m_blocks[row];
     }
     return QVariant();
 }
 
 QHash<int, QByteArray> BlocksListModel::roleNames() const {
     QHash<int, QByteArray> mapping {
-        {BlocksRoles::BlockTypeRole, "blockType"},
-        {BlocksRoles::BlockContentRole, "blockContent"},
+        {Roles::TypeRole, "blockType"},
+        {Roles::ContentRole, "blockContent"},
     };
     return mapping;
 }

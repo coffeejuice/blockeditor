@@ -12,7 +12,7 @@ class DieSelectorModel final : public QAbstractListModel
     Q_OBJECT
     QML_ELEMENT
     QML_UNCREATABLE("BilletSelectorModel must be instantinated in C++")
-    Q_PROPERTY(QVariantMap documentBegin READ documentBegin NOTIFY documentBeginChanged)
+    Q_PROPERTY(QVariantMap documentBegin READ documentBegin NOTIFY documentChanged)
 
     QStringList m_types;
     QList<std::unique_ptr<BaseItem>> m_blocks;
@@ -42,9 +42,9 @@ class DieSelectorModel final : public QAbstractListModel
     };
 
 public:
-    enum BlocksRoles {
-        BlockTypeRole = Qt::UserRole + 1,
-        BlockContentRole,
+    enum Roles {
+        TypeRole = Qt::UserRole + 1,
+        ContentRole,
     };
 
     explicit DieSelectorModel(QObject *parent = nullptr);
@@ -68,7 +68,7 @@ public:
     void endResetModelWithDocRecalc()   { endResetModel(); updateDocumentBeginCache(); }
 
 signals:
-    void documentBeginChanged();
+    void documentChanged();
 
 protected:
     // Make sure to call this whenever the model content changes in a way
@@ -77,15 +77,15 @@ protected:
         QVariantMap found;
         for (int r = 0; r < rowCount(); ++r) {
             const QModelIndex idx = index(r, 0);
-            const QString type = data(idx, BlockTypeRole).toString();
+            const QString type = data(idx, TypeRole).toString();
             if (type == QStringLiteral("documentBegin")) {
-                found = data(idx, BlockContentRole).toMap();
+                found = data(idx, ContentRole).toMap();
                 break;
             }
         }
         if (found != m_documentBegin) {
             m_documentBegin = found;
-            emit documentBeginChanged();
+            emit documentChanged();
         }
     }
 

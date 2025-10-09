@@ -157,16 +157,16 @@ QVariant BlocksListModel::data(const QModelIndex &index, int role) const {
     const int row = index.row();
 
     switch (role) {
-        case BlockTypeRole:     return m_types[row];
-        // case BlockContentRole:  return m_blocks[row]->toVariantMap();
+        case TypeRole:     return m_types[row];
+        // case ContentRole:  return m_blocks[row]->toVariantMap();
     }
     return QVariant();
 }
 
 QHash<int, QByteArray> BlocksListModel::roleNames() const {
     QHash<int, QByteArray> mapping {
-        {BlocksRoles::BlockTypeRole, "blockType"},
-        {BlocksRoles::BlockContentRole, "blockContent"},
+        {Roles::TypeRole, "blockType"},
+        {Roles::ContentRole, "blockContent"},
     };
     return mapping;
 }
