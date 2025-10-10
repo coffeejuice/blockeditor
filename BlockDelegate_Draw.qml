@@ -6,7 +6,9 @@ import blockeditor
 
 BlockDelegateLayout {
     id: root
-    required property var blockContent
+    // required property var blockContent
+    // required property var listModel
+    required property var a
     required property int index            // ListView's row index
 
     listView: ListView.view
@@ -16,7 +18,11 @@ BlockDelegateLayout {
     Column {
         id: drawColumn
         spacing: 6
-        Label { text: "Draw"; font.bold: true }
-        Label { text: String(blockContent?.operations ?? "") }
+        Row {
+            spacing: 8
+            Label { text: "Drawing operations: "; width: 110; horizontalAlignment: Text.AlignRight }
+            TextField { text: a; placeholderText: "(500)->450->(90)480->(45)435"; onEditingFinished: listView.model.setField(index,"a",text) }
+        }
     }
+    // MouseArea { width: parent.width; height: implicitHeight; onClicked: view.currentIndex = index }
 }

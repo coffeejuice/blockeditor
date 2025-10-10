@@ -6,7 +6,8 @@ import blockeditor
 
 BlockDelegateLayout {
     id: root
-    required property var blockContent
+    // required property var listModel
+    required property var a
     required property int index            // ListView's row index
 
     listView: ListView.view
@@ -16,7 +17,11 @@ BlockDelegateLayout {
     Column {
         id: upsetColumn
         spacing: 6
-        Label { text: "Upset"; font.bold: true }
-        Label { text: String(blockContent?.operations ?? "") }
+        Row {
+            spacing: 8
+            Label { text: "Upsetting operations: "; width: 110; horizontalAlignment: Text.AlignRight }
+            TextField { text: a; placeholderText: "(1400)->1100->900"; onEditingFinished: listView.model.setField(index,"a",text) }
+        }
     }
+    // MouseArea { width: parent.width; height: implicitHeight; onClicked: view.currentIndex = index }
 }

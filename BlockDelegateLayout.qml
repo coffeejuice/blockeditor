@@ -8,6 +8,9 @@ Rectangle {
     required property int itemIndex
     required property ItemView listView
 
+    z: 0
+    color: ListView.isCurrentItem ? "#3300FF00" : "transparent"  // semi-transparent fill
+
     width: parent ? parent.width : 0
     height: contourRect.height + 10
 
@@ -20,6 +23,9 @@ Rectangle {
         x: 5
         radius: 5
         border.color: "gray"
+
+        // contourRect stays above:
+        z: 1
 
         // Left image
         Rectangle {
@@ -51,26 +57,20 @@ Rectangle {
         }
 
         MouseArea {
-            anchors.fill: parent
+            z: -1
+            anchors.fill: contourRect
+            anchors.margins: 0
             hoverEnabled: true
             enabled: root.listView.parent.viewInteraction
+            propagateComposedEvents: true
 
             onReleased: {
                 root.listView.currentIndex = root.itemIndex
                 contourRect.color = "white"
             }
-
-            onPressed: {
-                contourRect.color = "gray"
-            }
-
-            onEntered: {
-                contourRect.color = "lightgray"
-            }
-
-            onExited: {
-                contourRect.color = "white"
-            }
+            onPressed: { contourRect.color = "gray" }
+            onEntered: { contourRect.color = "lightgray" }
+            onExited: { contourRect.color = "white" }
         }
     }
 

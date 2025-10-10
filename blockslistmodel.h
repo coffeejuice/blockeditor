@@ -7,7 +7,14 @@
 #include <variant>
 #include <QJsonObject>
 
-struct Document {
+// Base class for JSON (de)serialization
+struct JsonSerializable {
+    virtual ~JsonSerializable() = default;
+    virtual QJsonObject toJson() const = 0;
+    virtual void fromJson(const QJsonObject& o) = 0;
+};
+
+struct Document : public JsonSerializable {
     QString name, material_id, mesh_elements, weight;
 
     static constexpr const char* type() { return "document"; }
@@ -30,7 +37,7 @@ struct Document {
         default: return false;
         }
     }
-    QJsonObject toJson() const {
+    QJsonObject toJson() const override {
         return QJsonObject{
             {"a", name},
             {"b", material_id},
@@ -38,17 +45,15 @@ struct Document {
             {"d", weight},
         };
     }
-    static Document fromJson(const QJsonObject& o) {
-        return Document{
-            o["a"].toString(),
-            o["b"].toString(),
-            o["c"].toString(),
-            o["d"].toString(),
-        };
+    void fromJson(const QJsonObject& o) override {
+        name = o["a"].toString();
+        material_id = o["b"].toString();
+        mesh_elements = o["c"].toString();
+        weight = o["d"].toString();
     }
 };
 
-struct Block {
+struct Block : public JsonSerializable {
     QString
         name,
         press_id,
@@ -56,7 +61,7 @@ struct Block {
         feed_direction_id,
         feed_first, feed_middle, feed_last,
         speed_upsetting, speed_prolongation, speed_full_die;
-    static constexpr const char* type() { return "document"; }
+    static constexpr const char* type() { return "block"; }
     static constexpr int fieldCount()   { return 12; }
     QString get(const int slot) const {
         switch (slot) {
@@ -92,7 +97,7 @@ struct Block {
         default: return false;
         }
     }
-    QJsonObject toJson() const {
+    QJsonObject toJson() const override {
         return QJsonObject{
             {"a", name},
             {"b", press_id},
@@ -108,25 +113,23 @@ struct Block {
             {"l", speed_full_die},
         };
     }
-    static Block fromJson(const QJsonObject& o) {
-        return Block{
-            o["a"].toString(),
-            o["b"].toString(),
-            o["c"].toString(),
-            o["d"].toString(),
-            o["e"].toString(),
-            o["f"].toString(),
-            o["g"].toString(),
-            o["h"].toString(),
-            o["i"].toString(),
-            o["j"].toString(),
-            o["k"].toString(),
-            o["l"].toString(),
-        };
+    void fromJson(const QJsonObject& o) override {
+        name = o["a"].toString();
+        press_id = o["b"].toString();
+        die_assembly_id = o["c"].toString();
+        top_die_id = o["d"].toString();
+        bottom_die_id = o["e"].toString();
+        feed_direction_id = o["f"].toString();
+        feed_first = o["g"].toString();
+        feed_middle = o["h"].toString();
+        feed_last = o["i"].toString();
+        speed_upsetting = o["j"].toString();
+        speed_prolongation = o["k"].toString();
+        speed_full_die = o["l"].toString();
     }
 };
 
-struct Heat {
+struct Heat : public JsonSerializable {
     QString name, timeUnits, typeTimeTemperature;
     static constexpr const char* type() { return "heat"; }
     static constexpr int fieldCount()   { return 3; }
@@ -146,23 +149,21 @@ struct Heat {
         default: return false;
         }
     }
-    QJsonObject toJson() const {
+    QJsonObject toJson() const override {
         return QJsonObject{
             {"a", name},
             {"b", timeUnits},
             {"c", typeTimeTemperature},
         };
     }
-    static Heat fromJson(const QJsonObject& o) {
-        return Heat{
-            o["a"].toString(),
-            o["b"].toString(),
-            o["c"].toString(),
-        };
+    void fromJson(const QJsonObject& o) override {
+        name = o["a"].toString();
+        timeUnits = o["b"].toString();
+        typeTimeTemperature = o["c"].toString();
     }
 };
 
-struct Upset {
+struct Upset : public JsonSerializable {
     QString operations;
     static constexpr const char* type() { return "upset"; }
     static constexpr int fieldCount()   { return 1; }
@@ -178,19 +179,17 @@ struct Upset {
         default: return false;
         }
     }
-    QJsonObject toJson() const {
+    QJsonObject toJson() const override {
         return QJsonObject{
             {"a", operations},
         };
     }
-    static Upset fromJson(const QJsonObject& o) {
-        return Upset{
-            o["a"].toString(),
-        };
+    void fromJson(const QJsonObject& o) override {
+        operations = o["a"].toString();
     }
 };
 
-struct Draw {
+struct Draw : public JsonSerializable {
     QString operations;
     static constexpr const char* type() { return "draw"; }
     static constexpr int fieldCount()   { return 1; }
@@ -206,15 +205,13 @@ struct Draw {
         default: return false;
         }
     }
-    QJsonObject toJson() const {
+    QJsonObject toJson() const override {
         return QJsonObject{
             {"a", operations},
         };
     }
-    static Draw fromJson(const QJsonObject& o) {
-        return Draw{
-            o["a"].toString(),
-        };
+    void fromJson(const QJsonObject& o) override {
+        operations = o["a"].toString();
     }
 };
 
@@ -226,9 +223,8 @@ class BlocksListModel : public QAbstractListModel
     Q_OBJECT
     QML_ELEMENT
     QML_UNCREATABLE("BlocksListModel must be instantinated in C++")
-    Q_PROPERTY(QVariantMap document READ document NOTIFY documentChanged)
+    Q_PROPERTY(QVariantMap document READ documentBegin NOTIFY documentChanged)
 
-    QStringList m_types;
     QList<ItemVariant> m_blocks;
     QVariantMap m_documentBegin;  // cached documentBegin value
 
@@ -254,25 +250,25 @@ public:
     enum Roles {
         TypeRole = Qt::UserRole + 1, // "document" | "block" | "heat" | "upset" | "draw"
         ARole, BRole, CRole, DRole, ERole, FRole, GRole, HRole, IRole, JRole, KRole, LRole,  // slots 0,1,2,3,4,5,6,7,8,9,10,11,12
-        FieldCountRole,
+        FieldCountRole
         // ContentRole,
     };
     Q_ENUM(Roles)
 
     explicit BlocksListModel(QObject *parent = nullptr);
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex &index, const int role = Qt::DisplayRole) const override;
+    [[nodiscard]] int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    [[nodiscard]] QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     bool setData(const QModelIndex &index, const QVariant &value, int role) override;
-    Qt::ItemFlags flags(const QModelIndex &index) const override;
-    QHash<int, QByteArray> roleNames() const override;
+    [[nodiscard]] Qt::ItemFlags flags(const QModelIndex &index) const override;
+    [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
-    Q_INVOKABLE bool appendDocument(
+    Q_INVOKABLE void appendDocument(
         const QString& name = {},
         const QString& material_id = {},
         const QString& mesh_elements = {},
         const QString& weight = {}
     );
-    Q_INVOKABLE bool appendBlock(
+    Q_INVOKABLE void appendBlock(
         const QString& name = {},
         const QString& press_id = {},
         const QString& die_assembly_id = {},
@@ -286,15 +282,15 @@ public:
         const QString& speed_prolongation = {},
         const QString& speed_full_die = {}
     );
-    Q_INVOKABLE bool appendHeat(
+    Q_INVOKABLE void appendHeat(
         const QString& name = {},
         const QString& timeUnits = {},
         const QString& typeTimeTemperature = {}
     );
-    Q_INVOKABLE bool appendUpset(const QString& operations = {});
-    Q_INVOKABLE bool appendDraw(const QString& operations = {});
+    Q_INVOKABLE void appendUpset(const QString& operations = {});
+    Q_INVOKABLE void appendDraw(const QString& operations = {});
 
-    Q_INVOKABLE bool appendRow(int rowNumber);
+    // Q_INVOKABLE bool appendRow(int rowNumber);
     Q_INVOKABLE bool insertRows(int row, int count, const QModelIndex &parent) override;
     Q_INVOKABLE bool moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationRow) override;
     Q_INVOKABLE bool removeRows(int row, int count, const QModelIndex &parent) override;
@@ -319,19 +315,8 @@ protected:
     // Make sure to call this whenever the model content changes in a way
     // that might affect the "documentBegin" row (insert/remove/setData/clear/move).
     void updateDocumentCache() {
-        QVariantMap found;
-        for (int r = 0; r < rowCount(); ++r) {
-            const QModelIndex idx = index(r, 0);
-            const QString type = data(idx, TypeRole).toString();
-            if (type == QStringLiteral("documentBegin")) {
-                found = data(idx, ContentRole).toMap();
-                break;
-            }
-        }
-        if (found != m_documentBegin) {
-            m_documentBegin = found;
-            emit documentChanged();
-        }
+        // Simplified cache update: emit change signal
+        emit documentChanged();
     }
 };
 

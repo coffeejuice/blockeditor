@@ -39,13 +39,13 @@ Item {
         model: root.blocksModel
 
         delegate: DelegateChooser {
-            role: "blockType" // C++ must expose this role
+            role: "type" // C++ must expose this role
 
             DelegateChoice { roleValue: "document";    delegate: BlockDelegate_Document {} }
             DelegateChoice { roleValue: "block";       delegate: BlockDelegate_Block {}}
-            DelegateChoice { roleValue: "heat";             delegate: BlockDelegate_Heat {} }
-            DelegateChoice { roleValue: "upset";            delegate: BlockDelegate_Upset {} }
-            DelegateChoice { roleValue: "draw";             delegate: BlockDelegate_Draw {} }
+            DelegateChoice { roleValue: "heat";        delegate: BlockDelegate_Heat {} }
+            DelegateChoice { roleValue: "upset";       delegate: BlockDelegate_Upset {} }
+            DelegateChoice { roleValue: "draw";        delegate: BlockDelegate_Draw {} }
             // optional fallback
             DelegateChoice { delegate: BlockDelegate_Unknown {} }
         }
@@ -201,9 +201,9 @@ Item {
         Rectangle {
             id: highlightRect
 
-            border.color: "black"
-            color: "yellow"
-            opacity: 0.15
+            border.color: "green"
+            // color: "yellow"
+            opacity: 0.0
             z: root.viewInteraction ? (blocksView.z + 2) : 0
         }
     }

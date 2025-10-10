@@ -6,7 +6,7 @@ import blockeditor
 
 BlockDelegateLayout {
     id: root
-    required property var blockContent
+    // required property var blockContent
     required property int index            // ListView's row index
 
     listView: ListView.view

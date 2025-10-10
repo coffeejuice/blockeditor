@@ -9,7 +9,7 @@ Rectangle {
     required property var imageIndex
     required property int itemIndex
     required property ItemView listView
-    required property var blockContent
+    // required property var blockContent
     // required property int index            // ListView's row index
 
     // listView: ListView.view
@@ -57,33 +57,33 @@ Rectangle {
                 id: rightColumn
                 spacing: 6
                 Label { text: "Document"; font.bold: true }
-                Label { text: "Document Number: " + (blockContent?.documentNumber ?? "") }
-                Label { text: "Material: " + (blockContent?.material ?? "") }
-                Label { text: "Mesh density: " + (blockContent?.meshDensity ?? "") }
+                // Label { text: "Document Number: " + (blockContent?.documentNumber ?? "") }
+                // Label { text: "Material: " + (blockContent?.material ?? "") }
+                // Label { text: "Mesh density: " + (blockContent?.meshDensity ?? "") }
             }
         }
 
-        MouseArea {
-            anchors.fill: parent
-            hoverEnabled: true
-            enabled: root.listView.parent.viewInteraction
-
-            onReleased: {
-                root.listView.currentIndex = root.itemIndex
-                contourRect.color = "white"
-            }
-
-            onPressed: {
-                contourRect.color = "gray"
-            }
-
-            onEntered: {
-                contourRect.color = "lightgray"
-            }
-
-            onExited: {
-                contourRect.color = "white"
-            }
-        }
+        // MouseArea {
+        //     anchors.fill: parent
+        //     hoverEnabled: true
+        //     enabled: root.listView.parent.viewInteraction
+        //
+        //     onReleased: {
+        //         root.listView.currentIndex = root.itemIndex
+        //         contourRect.color = "white"
+        //     }
+        //
+        //     onPressed: {
+        //         contourRect.color = "gray"
+        //     }
+        //
+        //     onEntered: {
+        //         contourRect.color = "lightgray"
+        //     }
+        //
+        //     onExited: {
+        //         contourRect.color = "white"
+        //     }
+        // }
     }
 }
