@@ -7,11 +7,23 @@
 #include <QString>
 #include <QByteArray>
 #include <QFile>
+#include <utility>
 #include "blockslistmodel.h"
 
 // Seed
 BlocksListModel::BlocksListModel(QObject* parent) : QAbstractListModel(parent) {
-    appendDocument("100.0342.0","Inconel718","10","2000");
+    appendDocument(
+        "100.0342.0",
+        "Inconel718",
+        "10",
+        "2000",
+        {"image0.jpg","image1.jpg","image2.jpg"},
+        {"image3.jpg","image4.jpg","image5.jpg"},
+        {"image6.jpg","image7.jpg","image8.jpg","image9.jpg"},
+        0,
+        1,
+        2
+        );
     appendBlock(
         "1.1",
         "80MN",
@@ -78,6 +90,20 @@ QVariant BlocksListModel::data(const QModelIndex &index, const int role) const {
     if (role == TypeRole)           return typeOf(v);
     if (role == FieldCountRole)     return fieldCountOf(v);
 
+    // Additional selector roles only for Document
+    if (std::holds_alternative<Document>(v)) {
+        const Document& d = std::get<Document>(v);
+        switch (role) {
+        case AListRole: return d.selectorAImages;
+        case BListRole: return d.selectorBImages;
+        case CListRole: return d.selectorCImages;
+        case ASelectedRole: return d.selectorASelected;
+        case BSelectedRole: return d.selectorBSelected;
+        case CSelectedRole: return d.selectorCSelected;
+        default: break;
+        }
+    }
+
     // slot data
     if (const int slot = slotFromRole(role); slot >= 0)     return getSlot(v, slot);
 
@@ -88,6 +114,22 @@ bool BlocksListModel::setData(const QModelIndex &index, const QVariant &value, i
 
     if (!checkIndex(index, CheckIndexOption::IndexIsValid)) return false;
     // if (role != Qt::EditRole) return false;
+
+    // Handle selector selected roles for Document
+    if (role == ASelectedRole || role == BSelectedRole || role == CSelectedRole) {
+        auto& v = m_blocks[index.row()];
+        if (!std::holds_alternative<Document>(v)) return false;
+        Document& d = std::get<Document>(v);
+        const int newSel = value.toInt();
+        bool changed = false;
+        if (role == ASelectedRole && d.selectorASelected != newSel) { d.selectorASelected = newSel; changed = true; }
+        else if (role == BSelectedRole && d.selectorBSelected != newSel) { d.selectorBSelected = newSel; changed = true; }
+        else if (role == CSelectedRole && d.selectorCSelected != newSel) { d.selectorCSelected = newSel; changed = true; }
+        if (changed) {
+            emit dataChanged(index, index, { role });
+        }
+        return changed;
+    }
 
     const int slot = slotFromRole(role);
     if (slot < 0) return false;
@@ -125,12 +167,29 @@ QHash<int, QByteArray> BlocksListModel::roleNames() const {
             { JRole,          "j" },
             { KRole,          "k" },
             { LRole,          "l" },
-            { FieldCountRole, "fieldCount" }
+            { FieldCountRole, "fieldCount" },
+            { AListRole,      "aList" },
+            { BListRole,      "bList" },
+            { CListRole,      "cList" },
+            { ASelectedRole,  "aSelected" },
+            { BSelectedRole,  "bSelected" },
+            { CSelectedRole,  "cSelected" }
     };
     return mapping;
 }
 // QML helpers
-void BlocksListModel::appendDocument(const QString& name, const QString& material_id, const QString& mesh_elements, const QString& weight) {
+void BlocksListModel::appendDocument(
+    const QString& name,
+    const QString& material_id,
+    const QString& mesh_elements,
+    const QString& weight,
+    QStringList selectorAImages,
+    QStringList selectorBImages,
+    QStringList selectorCImages,
+    const int selectorASelected,
+    const int selectorBSelected,
+    const int selectorCSelected
+) {
     const int r = static_cast<int>(m_blocks.size());
     beginInsertRows({}, r, r);
     Document d;
@@ -138,6 +197,12 @@ void BlocksListModel::appendDocument(const QString& name, const QString& materia
     d.material_id = material_id;
     d.mesh_elements = mesh_elements;
     d.weight = weight;
+    d.selectorAImages = std::move(selectorAImages);
+    d.selectorBImages = std::move(selectorBImages);
+    d.selectorCImages = std::move(selectorCImages);
+    d.selectorASelected = selectorASelected;
+    d.selectorBSelected = selectorBSelected;
+    d.selectorCSelected = selectorCSelected;
     m_blocks.push_back(d);
     endInsertRows();
 }
@@ -278,6 +343,9 @@ bool BlocksListModel::setField(const int row, const QString& roleName, const QVa
     else if (roleName == "j") role = JRole;
     else if (roleName == "k") role = KRole;
     else if (roleName == "l") role = LRole;
+    else if (roleName == "aSelected") role = ASelectedRole;
+    else if (roleName == "bSelected") role = BSelectedRole;
+    else if (roleName == "cSelected") role = CSelectedRole;
     if (role < 0) return false;
     return setData(index(row, 0), value, role);
 }
@@ -337,4 +405,17 @@ bool BlocksListModel::clearModel(const int rowNumber) {
     updateDocumentCache();
 
     return true;
+}
+
+void BlocksListModel::setSelectorSelected(int row, const QString& which, int index) {
+    if (row < 0 || row >= m_blocks.size()) return;
+    auto& v = m_blocks[row];
+    if (!std::holds_alternative<Document>(v)) return;
+    Document& d = std::get<Document>(v);
+    int role = -1;
+    if (which == "a") role = ASelectedRole;
+    else if (which == "b") role = BSelectedRole;
+    else if (which == "c") role = CSelectedRole;
+    if (role < 0) return;
+    setData(this->index(row, 0), index, role);
 }

@@ -61,16 +61,20 @@ Rectangle {
             anchors.fill: contourRect
             anchors.margins: 0
             hoverEnabled: true
-            enabled: root.listView.parent.viewInteraction
             propagateComposedEvents: true
 
-            onReleased: {
+            // Completely disable reactions when selected
+            enabled: root.listView.parent.viewInteraction && (root.listView.currentIndex !== root.itemIndex)
+            acceptedButtons: enabled ? Qt.LeftButton | Qt.RightButton : Qt.NoButton
+            preventStealing: enabled
+
+            onReleased: if (enabled) {
                 root.listView.currentIndex = root.itemIndex
                 contourRect.color = "white"
             }
-            onPressed: { contourRect.color = "gray" }
-            onEntered: { contourRect.color = "lightgray" }
-            onExited: { contourRect.color = "white" }
+            onPressed: if (enabled) contourRect.color = "gray"
+            onEntered: if (enabled) contourRect.color = "lightgray"
+            onExited: if (enabled) contourRect.color = "white"
         }
     }
 

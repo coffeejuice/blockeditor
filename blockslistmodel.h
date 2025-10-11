@@ -16,6 +16,11 @@ struct JsonSerializable {
 
 struct Document : public JsonSerializable {
     QString name, material_id, mesh_elements, weight;
+    // Three image selector lists and their selected indices
+    QStringList selectorAImages, selectorBImages, selectorCImages;
+    int selectorASelected = -1;
+    int selectorBSelected = -1;
+    int selectorCSelected = -1;
 
     static constexpr const char* type() { return "document"; }
     static constexpr int fieldCount()   { return 4; }
@@ -250,7 +255,9 @@ public:
     enum Roles {
         TypeRole = Qt::UserRole + 1, // "document" | "block" | "heat" | "upset" | "draw"
         ARole, BRole, CRole, DRole, ERole, FRole, GRole, HRole, IRole, JRole, KRole, LRole,  // slots 0,1,2,3,4,5,6,7,8,9,10,11,12
-        FieldCountRole
+        FieldCountRole,
+        AListRole, BListRole, CListRole,               // QStringList of image file names
+        ASelectedRole, BSelectedRole, CSelectedRole    // int selected index
         // ContentRole,
     };
     Q_ENUM(Roles)
@@ -266,7 +273,13 @@ public:
         const QString& name = {},
         const QString& material_id = {},
         const QString& mesh_elements = {},
-        const QString& weight = {}
+        const QString& weight = {},
+        QStringList selectorAImages = {},
+        QStringList selectorBImages = {},
+        QStringList selectorCImages = {},
+        int selectorASelected = -1,
+        int selectorBSelected = -1,
+        int selectorCSelected = -1
     );
     Q_INVOKABLE void appendBlock(
         const QString& name = {},
@@ -300,6 +313,7 @@ public:
     Q_INVOKABLE bool loadFromFile(const QString& filePath);
     Q_INVOKABLE void removeRowAt(int row);
     Q_INVOKABLE bool setField(int row, const QString& roleName, const QVariant& value);
+    Q_INVOKABLE void setSelectorSelected(int row, const QString& which, int index);
 
     // 1) Property getter (reactive)
     QVariantMap documentBegin() const { return m_documentBegin; }

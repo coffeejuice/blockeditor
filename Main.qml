@@ -1,7 +1,7 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
-import QtQml.Models
+// import QtQml.Models
 
 import blockeditor
 
