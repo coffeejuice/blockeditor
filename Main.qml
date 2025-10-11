@@ -1,8 +1,8 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
-// import QtQml.Models
-
+import QtCore
+import Qt.labs.platform as Labs
 import blockeditor
 
 ApplicationWindow {
@@ -14,30 +14,59 @@ ApplicationWindow {
 
     required property BlocksListModel blocksListModel
 
-    header: TextField {
-        id: filterText
+    // Plain string path (not URL), with forward slash
+    readonly property string documentsPath: Labs.StandardPaths.writableLocation(Labs.StandardPaths.DocumentsLocation)
+    readonly property string jsonPath: documentsPath + "/test.json"
 
-        placeholderText: qsTr("Enter a block type name")
-        text: "" // window.filterModel.lastName
-        font.pointSize: 18
-        onEditingFinished: {
-            focus = false
-            // window.filterModel.lastName = text
+    header: Row {
+        id: fileButtons
+        spacing: 8
+        anchors {
+            right: parent.right
+            rightMargin: 12
+            top: parent.top
+            topMargin: 12
         }
 
-        Keys.onEscapePressed: {
-            focus = false
+        Button {
+            text: "Save JSON"
+            onClicked: {
+                console.log("Saving to:", jsonPath)
+                window.blocksListModel.saveToFile(jsonPath)
+            }
+        }
+
+        Button {
+            text: "Load JSON"
+            onClicked: {
+                console.log("Loading from:", jsonPath)
+                window.blocksListModel.loadFromFile(jsonPath)
+            }
         }
     }
 
-    Row {
-        anchors.fill: parent
+        // TextField {
+        //     id: filterText
+        //
+        //     placeholderText: qsTr("Enter a block type name")
+        //     text: "" // window.filterModel.lastName
+        //     font.pointSize: 18
+        //     onEditingFinished: {
+        //         focus = false
+        //         // window.filterModel.lastName = text
+        //     }
+        //
+        //     Keys.onEscapePressed: {
+        //         focus = false
+        //     }
+        // }
+    // }
 
-        BlocksListView {
-            id: blocksListView
-            blocksModel: window.blocksListModel
-            viewInteraction: filterText.focus ? false : true
-            title: qsTr("Blocks List")
-        }
+    // The main view (ensure it has objectName/id so buttons can access the model)
+    BlocksListView {
+        id: blocksListView
+        blocksModel: window.blocksListModel
+        viewInteraction: true
+        title: qsTr("Blocks List")
     }
 }

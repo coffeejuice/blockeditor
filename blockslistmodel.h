@@ -6,6 +6,7 @@
 #include <QQmlEngine>
 #include <variant>
 #include <QJsonObject>
+#include <QJsonArray>
 
 // Base class for JSON (de)serialization
 struct JsonSerializable {
@@ -48,6 +49,13 @@ struct Document : public JsonSerializable {
             {"b", material_id},
             {"c", mesh_elements},
             {"d", weight},
+            // selectors
+            {"aList", QJsonArray::fromStringList(selectorAImages)},
+            {"bList", QJsonArray::fromStringList(selectorBImages)},
+            {"cList", QJsonArray::fromStringList(selectorCImages)},
+            {"aSelected", selectorASelected},
+            {"bSelected", selectorBSelected},
+            {"cSelected", selectorCSelected},
         };
     }
     void fromJson(const QJsonObject& o) override {
@@ -55,6 +63,23 @@ struct Document : public JsonSerializable {
         material_id = o["b"].toString();
         mesh_elements = o["c"].toString();
         weight = o["d"].toString();
+
+        // selectors
+        auto toStringList = [](const QJsonValue& v)->QStringList {
+            QStringList out;
+            if (v.isArray()) {
+                const auto arr = v.toArray();
+                out.reserve(arr.size());
+                for (const auto& e : arr) out.push_back(e.toString());
+            }
+            return out;
+        };
+        selectorAImages = toStringList(o.value("aList"));
+        selectorBImages = toStringList(o.value("bList"));
+        selectorCImages = toStringList(o.value("cList"));
+        selectorASelected = o.value("aSelected").toInt(-1);
+        selectorBSelected = o.value("bSelected").toInt(-1);
+        selectorCSelected = o.value("cSelected").toInt(-1);
     }
 };
 

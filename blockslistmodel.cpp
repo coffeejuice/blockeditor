@@ -8,6 +8,9 @@
 #include <QByteArray>
 #include <QFile>
 #include <utility>
+#include <QFileInfo>
+#include <QUrl>
+#include <QDir>
 #include "blockslistmodel.h"
 
 // Seed
@@ -286,27 +289,41 @@ void BlocksListModel::removeRowAt(const int row) {
 }
 
 bool BlocksListModel::saveToFile(const QString& filePath) const {
+    // Accept both local paths and file URLs
+    QString p = filePath;
+    if (p.startsWith("file:/")) {
+        const QUrl u(p);
+        if (u.isLocalFile())
+            p = u.toLocalFile();
+    }
+    // Normalize separators to native
+    p = QDir::toNativeSeparators(p);
+
+    QFile f(p);
+    if (!f.open(QIODevice::WriteOnly)) return false;
+
     QJsonArray arr;
     for (const auto& v : m_blocks) {
         QJsonObject o;
         o["type"] = typeOf(v);
-        // per-type JSON emitted by each struct
-        {
-            const QJsonObject per = std::visit([](auto const& obj){ return obj.toJson(); }, v);
-            for (auto it = per.begin(); it != per.end(); ++it) {
-                o.insert(it.key(), it.value());
-            }
-        }
+        const QJsonObject per = std::visit([](auto const& obj){ return obj.toJson(); }, v);
+        for (auto it = per.begin(); it != per.end(); ++it) o.insert(it.key(), it.value());
         arr.append(o);
     }
-    QFile f(filePath);
-    if (!f.open(QIODevice::WriteOnly)) return false;
     f.write(QJsonDocument(arr).toJson(QJsonDocument::Indented));
     return true;
 }
 
 bool BlocksListModel::loadFromFile(const QString& filePath) {
-    QFile f(filePath);
+    QString p = filePath;
+    if (p.startsWith("file:/")) {
+        const QUrl u(p);
+        if (u.isLocalFile())
+            p = u.toLocalFile();
+    }
+    p = QDir::toNativeSeparators(p);
+
+    QFile f(p);
     if (!f.open(QIODevice::ReadOnly)) return false;
     const auto doc = QJsonDocument::fromJson(f.readAll());
     if (!doc.isArray()) return false;
