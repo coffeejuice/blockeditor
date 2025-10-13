@@ -48,11 +48,7 @@ qt_add_qml_module(appblockeditor
     SOURCES
         blockslistmodel.h
         blockslistmodel.cpp
-#        billetselectormodel.h
-#        billetselectormodel.cpp
-#        dieselectormodel.h
-#        dieselectormodel.cpp
-        generated_operations.cpp
+        blocks.h
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

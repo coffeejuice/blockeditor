@@ -18,14 +18,6 @@ BlockDelegateLayout {
     required property int aSelected
     required property int bSelected
     required property int cSelected
-    // Selector lists and selections (required due to Bound component behavior)
-    // Selector lists and selections are optional; default to empty lists and -1 selections
-    // property var aList: []
-    // property var bList: []
-    // property var cList: []
-    // property int aSelected: -1
-    // property int bSelected: -1
-    // property int cSelected: -1
     required property int index            // ListView's row index
 
     listView: ListView.view
