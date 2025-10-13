@@ -1,19 +1,28 @@
-#include <QJsonObject>
+#include <utility>
+#include "blockslistmodel.h"
+#include <QDir>
+#include <QUrl>
+#include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonArray>
-#include <QVariantMap>
-#include <QVariantList>
-#include <QList>
-#include <QString>
-#include <QByteArray>
-#include <QFile>
-#include <utility>
-#include <QFileInfo>
-#include <QUrl>
-#include <QDir>
-#include "blockslistmodel.h"
 
-// Seed
+// ===================== Base factory =====================
+std::unique_ptr<BaseBlock> BaseBlock::makeFromEditPayload(const QVariantMap& obj) {
+    const auto t = obj.value("type").toString();
+    const auto content = obj.value("content").toMap();
+    std::unique_ptr<BaseBlock> p;
+    if (t == "document") p = std::make_unique<DocumentBlock>();
+    else if (t == "block") p = std::make_unique<BlockBlock>();
+    else if (t == "heat") p = std::make_unique<HeatBlock>();
+    else if (t == "upset") p = std::make_unique<UpsetBlock>();
+    else if (t == "draw") p = std::make_unique<DrawBlock>();
+    else return nullptr;
+    p->assignFromMap(content);
+    return p;
+}
+
+// ===================== Model impl =====================
+
 BlocksListModel::BlocksListModel(QObject* parent) : QAbstractListModel(parent) {
     appendDocument(
         "100.0342.0",
@@ -68,47 +77,35 @@ int BlocksListModel::rowCount(const QModelIndex &parent) const {
 }
 
 // Small helpers that defer everything to the active struct
-static QString typeOf(const ItemVariant& v) {
-    return std::visit([](auto const& obj)->QString { return obj.type(); }, v);
-}
+// REMOVE obsolete std::variant-based helpers and use virtual calls instead.
 
-static int fieldCountOf(const ItemVariant& v) {
-    return std::visit([](auto const& obj)->int { return obj.fieldCount(); }, v);
-}
+// Old (obsolete):
+// static QString typeOf(const ItemVariant& v) { ... }
+// static int fieldCountOf(const ItemVariant& v) { ... }
+// static QString getSlot(const ItemVariant& v, int slot) { ... }
+// static bool setSlot(ItemVariant& v, int slot, const QString& value) { ... }
 
-static QString getSlot(const ItemVariant& v, int slot) {
-    return std::visit([&](auto const& obj)->QString { return obj.get(slot); }, v);
-}
-
-static bool setSlot(ItemVariant& v, int slot, const QString& value) {
-    return std::visit([&](auto& obj)->bool { return obj.set(slot, value); }, v);
-}
+// Replace usages below:
 
 QVariant BlocksListModel::data(const QModelIndex &index, const int role) const {
 
     if (!checkIndex(index, CheckIndexOption::IndexIsValid)) return {};
 
-    const auto& v = m_blocks[index.row()];
+    // Safe read: bind to const ref, then get()
+    const std::unique_ptr<BaseBlock>& u = m_blocks.at(index.row());
+    BaseBlock* const ptr = u.get();
+    if (!ptr) return {};
 
-    if (role == TypeRole)           return typeOf(v);
-    if (role == FieldCountRole)     return fieldCountOf(v);
+    if (role == TypeRole)           return ptr->type();
+    if (role == FieldCountRole)     return ptr->fieldCount();
+    if (role == AListRole)          return ptr->selectorAImages();
+    if (role == BListRole)          return ptr->selectorBImages();
+    if (role == CListRole)          return ptr->selectorCImages();
+    if (role == ASelectedRole)      return ptr->selectorASelected();
+    if (role == BSelectedRole)      return ptr->selectorBSelected();
+    if (role == CSelectedRole)      return ptr->selectorCSelected();
 
-    // Additional selector roles only for Document
-    if (std::holds_alternative<Document>(v)) {
-        const Document& d = std::get<Document>(v);
-        switch (role) {
-        case AListRole: return d.selectorAImages;
-        case BListRole: return d.selectorBImages;
-        case CListRole: return d.selectorCImages;
-        case ASelectedRole: return d.selectorASelected;
-        case BSelectedRole: return d.selectorBSelected;
-        case CSelectedRole: return d.selectorCSelected;
-        default: break;
-        }
-    }
-
-    // slot data
-    if (const int slot = slotFromRole(role); slot >= 0)     return getSlot(v, slot);
+    if (const int slot = slotFromTextFieldRole(role); slot >= 0) return ptr->get(slot);
 
     return {};
 }
@@ -116,38 +113,30 @@ QVariant BlocksListModel::data(const QModelIndex &index, const int role) const {
 bool BlocksListModel::setData(const QModelIndex &index, const QVariant &value, int role) {
 
     if (!checkIndex(index, CheckIndexOption::IndexIsValid)) return false;
-    // if (role != Qt::EditRole) return false;
 
-    // Handle selector selected roles for Document
+    // Read current ptr via const-ref; do not bind non-const ref to avoid copies
+    BaseBlock* ptr = m_blocks.at(index.row()).get();
+    if (!ptr) return false;
+
+    bool changed = false;
+
     if (role == ASelectedRole || role == BSelectedRole || role == CSelectedRole) {
-        auto& v = m_blocks[index.row()];
-        if (!std::holds_alternative<Document>(v)) return false;
-        Document& d = std::get<Document>(v);
-        const int newSel = value.toInt();
-        bool changed = false;
-        if (role == ASelectedRole && d.selectorASelected != newSel) { d.selectorASelected = newSel; changed = true; }
-        else if (role == BSelectedRole && d.selectorBSelected != newSel) { d.selectorBSelected = newSel; changed = true; }
-        else if (role == CSelectedRole && d.selectorCSelected != newSel) { d.selectorCSelected = newSel; changed = true; }
-        if (changed) {
-            emit dataChanged(index, index, { role });
-        }
-        return changed;
+        const int which = (role == ASelectedRole ? 0 : role == BSelectedRole ? 1 : 2);
+        changed = ptr->setSelectorSelected(which, value.toInt());
+    } else if (const int slot = slotFromTextFieldRole(role); slot >= 0) {
+        changed = ptr->set(slot, value.toString());
+    } else if (role == Qt::EditRole) {
+        const auto obj = value.toMap();
+        std::unique_ptr<BaseBlock> newItem = BaseBlock::makeFromEditPayload(obj);
+        if (!newItem) return false;
+        m_blocks[index.row()] = std::move(newItem);   // deletes the old pointee now
+        emit dataChanged(index, index, allRoleIds());
+        updateDocumentCache();
+        return true;
     }
 
-    const int slot = slotFromRole(role);
-    if (slot < 0) return false;
-
-    auto& v = m_blocks[index.row()];
-    // Keep edits within the active type's slot range
-    if (slot >= fieldCountOf(v)) return false;
-    if (!setSlot(v, slot, value.toString())) return false; // Not changed
-
-    emit dataChanged(index, index, { role });
-
-    // Similarly: after insert/remove/moveRows or clear, call updateDocumentBeginCache().
-    // updateDocumentCache();
-
-    return true;
+    if (changed) emit dataChanged(index, index, { role });
+    return changed;
 }
 
 Qt::ItemFlags BlocksListModel::flags(const QModelIndex &index) const {
@@ -189,24 +178,24 @@ void BlocksListModel::appendDocument(
     QStringList selectorAImages,
     QStringList selectorBImages,
     QStringList selectorCImages,
-    const int selectorASelected,
-    const int selectorBSelected,
-    const int selectorCSelected
+    const int aSel,
+    const int bSel,
+    const int cSel
 ) {
     const int r = static_cast<int>(m_blocks.size());
     beginInsertRows({}, r, r);
-    Document d;
-    d.name = name;
-    d.material_id = material_id;
-    d.mesh_elements = mesh_elements;
-    d.weight = weight;
-    d.selectorAImages = std::move(selectorAImages);
-    d.selectorBImages = std::move(selectorBImages);
-    d.selectorCImages = std::move(selectorCImages);
-    d.selectorASelected = selectorASelected;
-    d.selectorBSelected = selectorBSelected;
-    d.selectorCSelected = selectorCSelected;
-    m_blocks.push_back(d);
+    auto d = std::make_unique<DocumentBlock>();
+    d->name = name;
+    d->material_id = material_id;
+    d->mesh_elements = mesh_elements;
+    d->weight = weight;
+    d->aList = std::move(selectorAImages);
+    d->bList = std::move(selectorBImages);
+    d->cList = std::move(selectorCImages);
+    d->aSel = aSel;
+    d->bSel = bSel;
+    d->cSel = cSel;
+    m_blocks.push_back(std::move(d));
     endInsertRows();
 }
 void BlocksListModel::appendBlock(
@@ -225,46 +214,46 @@ void BlocksListModel::appendBlock(
 ) {
     const int r = static_cast<int>(m_blocks.size());
     beginInsertRows({}, r, r);
-    Block b;
-    b.name = name;
-    b.press_id = press_id;
-    b.die_assembly_id = die_assembly_id;
-    b.top_die_id = top_die_id;
-    b.bottom_die_id = bottom_die_id;
-    b.feed_direction_id = feed_direction_id;
-    b.feed_first = feed_first;
-    b.feed_middle = feed_middle;
-    b.feed_last = feed_last;
-    b.speed_upsetting = speed_upsetting;
-    b.speed_prolongation = speed_prolongation;
-    b.speed_full_die = speed_full_die;
-    m_blocks.push_back(b);
+    auto b = std::make_unique<BlockBlock>();
+    b->name = name;
+    b->press_id = press_id;
+    b->die_assembly_id = die_assembly_id;
+    b->top_die_id = top_die_id;
+    b->bottom_die_id = bottom_die_id;
+    b->feed_direction_id = feed_direction_id;
+    b->feed_first = feed_first;
+    b->feed_middle = feed_middle;
+    b->feed_last = feed_last;
+    b->speed_upsetting = speed_upsetting;
+    b->speed_prolongation = speed_prolongation;
+    b->speed_full_die = speed_full_die;
+    m_blocks.push_back(std::move(b));
     endInsertRows();
 }
 void BlocksListModel::appendHeat(const QString& name, const QString& timeUnits, const QString& typeTimeTemperature) {
     const int r = static_cast<int>(m_blocks.size());
     beginInsertRows({}, r, r);
-    Heat h;
-    h.name = name;
-    h.timeUnits = timeUnits;
-    h.typeTimeTemperature = typeTimeTemperature;
-    m_blocks.push_back(h);
+    auto h = std::make_unique<HeatBlock>();
+    h->name = name;
+    h->timeUnits = timeUnits;
+    h->typeTimeTemperature = typeTimeTemperature;
+    m_blocks.push_back(std::move(h));
     endInsertRows();
 }
 void BlocksListModel::appendUpset(const QString& operations) {
     const int r = static_cast<int>(m_blocks.size());
     beginInsertRows({}, r, r);
-    Upset u;
-    u.operations = operations;
-    m_blocks.push_back(u);
+    auto u = std::make_unique<UpsetBlock>();
+    u->operations = operations;
+    m_blocks.push_back(std::move(u));
     endInsertRows();
 }
 void BlocksListModel::appendDraw(const QString& operations) {
     const int r = static_cast<int>(m_blocks.size());
     beginInsertRows({}, r, r);
-    Draw d;
-    d.operations = operations;
-    m_blocks.push_back(d);
+    auto d = std::make_unique<DrawBlock>();
+    d->operations = operations;
+    m_blocks.push_back(std::move(d));
     endInsertRows();
 }
 
@@ -283,14 +272,14 @@ void BlocksListModel::appendDraw(const QString& operations) {
 void BlocksListModel::removeRowAt(const int row) {
     if (row < 0 || row >= m_blocks.size()) return;
     beginRemoveRows({}, row, row);
-    m_blocks.removeAt(row);
+    m_blocks.erase(m_blocks.begin() + row);
     endRemoveRows();
     updateDocumentCache();
 }
 
-bool BlocksListModel::saveToFile(const QString& filePath) const {
+bool BlocksListModel::saveToFile() const {
     // Accept both local paths and file URLs
-    QString p = filePath;
+    QString p = QString("C:/Users/alext/OneDrive/Documents/test.json");
     if (p.startsWith("file:/")) {
         const QUrl u(p);
         if (u.isLocalFile())
@@ -303,10 +292,11 @@ bool BlocksListModel::saveToFile(const QString& filePath) const {
     if (!f.open(QIODevice::WriteOnly)) return false;
 
     QJsonArray arr;
-    for (const auto& v : m_blocks) {
+    for (const auto& ptr : m_blocks) {
+        if (!ptr) continue;
         QJsonObject o;
-        o["type"] = typeOf(v);
-        const QJsonObject per = std::visit([](auto const& obj){ return obj.toJson(); }, v);
+        o["type"] = ptr->type();
+        const QJsonObject per = ptr->toJson();
         for (auto it = per.begin(); it != per.end(); ++it) o.insert(it.key(), it.value());
         arr.append(o);
     }
@@ -314,8 +304,8 @@ bool BlocksListModel::saveToFile(const QString& filePath) const {
     return true;
 }
 
-bool BlocksListModel::loadFromFile(const QString& filePath) {
-    QString p = filePath;
+bool BlocksListModel::loadFromFile() {
+    QString p = QString("C:/Users/alext/OneDrive/Documents/test.json");
     if (p.startsWith("file:/")) {
         const QUrl u(p);
         if (u.isLocalFile())
@@ -331,16 +321,18 @@ bool BlocksListModel::loadFromFile(const QString& filePath) {
     const auto arr = doc.array();
     beginResetModel();
     m_blocks.clear();
-    m_blocks.reserve(arr.size());
     for (const auto& v : arr) {
         const auto o = v.toObject();
-        const auto t = o["type"].toString();
-        if (t == Document::type())   { Document d; d.fromJson(o); m_blocks.push_back(d); }
-        else if (t == Block::type()) { Block b; b.fromJson(o); m_blocks.push_back(b); }
-        else if (t == Heat::type())  { Heat h; h.fromJson(o); m_blocks.push_back(h); }
-        else if (t == Upset::type()) { Upset u; u.fromJson(o); m_blocks.push_back(u); }
-        else if (t == Draw::type())  { Draw d; d.fromJson(o); m_blocks.push_back(d); }
+        const auto t = o.value("type").toString();
+        std::unique_ptr<BaseBlock> pItem;
+        if (t == "document")   pItem = std::make_unique<DocumentBlock>();
+        else if (t == "block") pItem = std::make_unique<BlockBlock>();
+        else if (t == "heat")  pItem = std::make_unique<HeatBlock>();
+        else if (t == "upset") pItem = std::make_unique<UpsetBlock>();
+        else if (t == "draw")  pItem = std::make_unique<DrawBlock>();
         else throw std::runtime_error(("Unknown block type: " + t).toStdString());
+        pItem->fromJson(o);
+        m_blocks.push_back(std::move(pItem));
     }
     endResetModel();
     return true;
@@ -360,9 +352,9 @@ bool BlocksListModel::setField(const int row, const QString& roleName, const QVa
     else if (roleName == "j") role = JRole;
     else if (roleName == "k") role = KRole;
     else if (roleName == "l") role = LRole;
-    else if (roleName == "aSelected") role = ASelectedRole;
-    else if (roleName == "bSelected") role = BSelectedRole;
-    else if (roleName == "cSelected") role = CSelectedRole;
+    // else if (roleName == "aSelected") role = ASelectedRole;
+    // else if (roleName == "bSelected") role = BSelectedRole;
+    // else if (roleName == "cSelected") role = CSelectedRole;
     if (role < 0) return false;
     return setData(index(row, 0), value, role);
 }
@@ -387,12 +379,22 @@ bool BlocksListModel::moveRows(const QModelIndex &sourceParent, const int source
 
     beginMoveRows(sourceParent, sourceRow, sourceRow, destinationParent, newDestination);
 
-    m_blocks.move(sourceRow, destinationRow);
+    if (sourceRow < destinationRow) {
+        std::rotate(
+            m_blocks.begin() + sourceRow,
+            m_blocks.begin() + sourceRow + 1,
+            m_blocks.begin() + destinationRow + 1
+        );
+    } else {
+        std::rotate(
+            m_blocks.begin() + destinationRow,
+            m_blocks.begin() + sourceRow,
+            m_blocks.begin() + sourceRow + 1
+        );
+    }
 
     endMoveRows();
-
     updateDocumentCache();
-
     return true;
 }
 
@@ -400,7 +402,7 @@ bool BlocksListModel::removeRows(const int row, const int count, const QModelInd
     beginRemoveRows(parent, row, row + count - 1);
 
     for (int i = 0; i < count; ++i) {
-        m_blocks.removeAt(row);
+        m_blocks.erase(m_blocks.begin() + row);
     }
 
     endRemoveRows();
@@ -415,7 +417,7 @@ bool BlocksListModel::clearModel(const int rowNumber) {
     const int previousRow = rowNumber - 1;
     beginRemoveRows(QModelIndex(), 0, previousRow);
 
-    m_blocks.remove(0, previousRow);
+    m_blocks.erase(m_blocks.begin() + previousRow);
 
     endRemoveRows();
 
@@ -424,15 +426,12 @@ bool BlocksListModel::clearModel(const int rowNumber) {
     return true;
 }
 
-void BlocksListModel::setSelectorSelected(int row, const QString& which, int index) {
+void BlocksListModel::setSelectorSelected(const int row, const QString& roleName, const int value) {
     if (row < 0 || row >= m_blocks.size()) return;
-    auto& v = m_blocks[row];
-    if (!std::holds_alternative<Document>(v)) return;
-    Document& d = std::get<Document>(v);
     int role = -1;
-    if (which == "a") role = ASelectedRole;
-    else if (which == "b") role = BSelectedRole;
-    else if (which == "c") role = CSelectedRole;
+    if (roleName == "a") role = ASelectedRole;
+    else if (roleName == "b") role = BSelectedRole;
+    else if (roleName == "c") role = CSelectedRole;
     if (role < 0) return;
-    setData(this->index(row, 0), index, role);
+    setData(this->index(row, 0), value, role);
 }

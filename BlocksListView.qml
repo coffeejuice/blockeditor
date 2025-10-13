@@ -67,9 +67,7 @@ Item {
         move: moveTransition
 
         Keys.onDeletePressed: {
-            if (blocksView.currentIndex < 0) {
-                console.log("Must select an element to delete an entry")
-            } else {
+            if (blocksView.currentIndex >= 0) {
                 let index = blocksView.model.index(blocksView.currentIndex, 0)
                 blocksView.model.removeRows(blocksView.currentIndex, 1, index.parent)
             }
@@ -80,9 +78,7 @@ Item {
         }
 
         Keys.onSpacePressed: {
-            if (blocksView.currentIndex < 0) {
-                console.log("Must select an element to modify an entry")
-            } else {
+            if (blocksView.currentIndex >= 0) {
                 let index = blocksView.model.index(blocksView.currentIndex, 0)
                 blocksView.model.setData(index, { "type": "draw", "content": { "operations": "(666)->595->(90)620" } }, Qt.EditRole)
             }
@@ -97,11 +93,7 @@ Item {
         }
 
         Keys.onUpPressed: {
-            if (blocksView.count <= 1) {
-                console.log("Not enough elements in model to move an element")
-            } else if (blocksView.currentIndex === 0){
-                console.log("Cannot move first element up")
-            } else {
+            if (blocksView.count > 1 || blocksView.currentIndex > 0) {
                 let sourceIndex = blocksView.model.index(blocksView.currentIndex, 0)
                 let destinationIndex = blocksView.model.index(blocksView.currentIndex - 1, 0)
                 blocksView.model.moveRows(sourceIndex.parent, blocksView.currentIndex, 1, destinationIndex.parent, blocksView.currentIndex - 1)
@@ -109,11 +101,7 @@ Item {
         }
 
         Keys.onDownPressed: {
-            if (blocksView.count <= 1) {
-                console.log("Not enough elements in model to move an element")
-            } else if (blocksView.currentIndex === (blocksView.count - 1)){
-                console.log("Cannot move last element down")
-            } else {
+            if (blocksView.count > 1 || blocksView.currentIndex < (blocksView.count - 1)) {
                 let sourceIndex = blocksView.model.index(blocksView.currentIndex, 0)
                 let destinationIndex = blocksView.model.index(blocksView.currentIndex + 1, 0)
                 blocksView.model.moveRows(sourceIndex.parent, blocksView.currentIndex, 1, destinationIndex.parent, blocksView.currentIndex + 1)
