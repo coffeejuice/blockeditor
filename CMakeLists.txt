@@ -45,6 +45,8 @@ qt_add_qml_module(appblockeditor
         assets/fire.svg
         assets/red_danger.svg
         assets/check_list_bw.svg
+        assets/plus.svg
+        assets/dots.svg
     SOURCES
         blockslistmodel.h
         blockslistmodel.cpp
