@@ -36,6 +36,9 @@ Item {
         property bool isEnab: root.viewInteraction
         property int lastItem: itemAtIndex(count - 1) ? (itemAtIndex(count - 1).height ? itemAtIndex(count - 1).height : 0) : 0
 
+        signal requestMove(int sourceIndex, int destinationIndex)
+        signal requestCopy(int sourceIndex, int destinationIndex)
+
         model: root.blocksModel
 
         delegate: DelegateChooser {
@@ -65,6 +68,49 @@ Item {
         add: addTransition
         remove: removeTransition
         move: moveTransition
+
+        // For the example only: perform the move/copy on the QML ListModel.
+        onRequestMove: (sourceIndex, destinationIndex) => {
+            if (sourceIndex === destinationIndex || sourceIndex < 0 || destinationIndex < 0) return
+            // normalize target for "drop between" feel
+            var target = Math.max(0, Math.min(count - 1, destinationIndex))
+            if (sourceIndex < target) target -= 1
+            blocksView.model.moveRows(sourceIndex.parent, blocksView.currentIndex, 1, destinationIndex.parent, blocksView.currentIndex - 1)
+        }
+        onRequestCopy: (sourceIndex, destinationIndex) => {
+            if (sourceIndex < 0 || destinationIndex < 0) return
+            var e = demoModel.get(sourceIndex)
+            var target = Math.max(0, Math.min(count, destinationIndex))
+            blocksView.model.insert(target, { text: e.text + " (copy)" })
+        }
+
+        // DropArea that spans the whole list to accept moves/copies.
+        DropArea {
+            anchors.fill: parent
+
+            onDropped: (drop) => {
+                // Read the source index from mimeData
+                var from = drop.mimeData["application/x-item-index"]
+                if (from === undefined) {
+                    drop.acceptProposedAction()
+                    return
+                }
+
+                // Compute destination index from drop position
+                var y = drop.position.y
+                var to = blocksView.indexAt(0, y)
+                if (to < 0) to = blocksView.count - 1
+
+                // Copy when Ctrl held, otherwise move
+                var isCopy = (drop.keys & Qt.ControlModifier) !== 0
+                if (isCopy) {
+                    blocksView.requestCopy(from, to)
+                } else {
+                    blocksView.requestMove(from, to)
+                }
+                drop.acceptProposedAction()
+            }
+        }
 
         Keys.onDeletePressed: {
             if (blocksView.currentIndex >= 0) {
