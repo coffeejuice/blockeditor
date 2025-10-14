@@ -70,88 +70,88 @@ Item {
         move: moveTransition
 
         // For the example only: perform the move/copy on the QML ListModel.
-        onRequestMove: (sourceIndex, destinationIndex) => {
-            let fromIndex = Number(sourceIndex)
-            let toIndex = Number(destinationIndex)
-            if (!isFinite(fromIndex) || !isFinite(toIndex)) return
-            if (fromIndex < 0 || toIndex < 0) return
-
-            let finalIndex = Math.max(0, Math.min(count - 1, toIndex))
-            if (finalIndex === fromIndex) return
-            if (blocksView.model.moveRowTo(fromIndex, finalIndex)) {
-                blocksView.currentIndex = finalIndex
-            }
-        }
-        onRequestCopy: (sourceIndex, destinationIndex) => {
-            if (sourceIndex < 0 || destinationIndex < 0) return
-            var e = demoModel.get(sourceIndex)
-            var target = Math.max(0, Math.min(count, destinationIndex))
-            blocksView.model.insert(target, { text: e.text + " (copy)" })
-        }
+        // onRequestMove: (sourceIndex, destinationIndex) => {
+        //     let fromIndex = Number(sourceIndex)
+        //     let toIndex = Number(destinationIndex)
+        //     if (!isFinite(fromIndex) || !isFinite(toIndex)) return
+        //     if (fromIndex < 0 || toIndex < 0) return
+        //
+        //     let finalIndex = Math.max(0, Math.min(count - 1, toIndex))
+        //     if (finalIndex === fromIndex) return
+        //     if (blocksView.model.moveRowTo(fromIndex, finalIndex)) {
+        //         blocksView.currentIndex = finalIndex
+        //     }
+        // }
+        // onRequestCopy: (sourceIndex, destinationIndex) => {
+        //     if (sourceIndex < 0 || destinationIndex < 0) return
+        //     var e = demoModel.get(sourceIndex)
+        //     var target = Math.max(0, Math.min(count, destinationIndex))
+        //     blocksView.model.insert(target, { text: e.text + " (copy)" })
+        // }
 
         // DropArea that spans the whole list to accept moves/copies.
-        DropArea {
-            anchors.fill: parent
-
-            onDropped: (drop) => {
-                // Read the source index from mimeData
-                var from = drop.mimeData["application/x-item-index"]
-                var fromIndex = Number(from)
-                if (!isFinite(fromIndex)) {
-                    drop.acceptProposedAction()
-                    return
-                }
-
-                if (blocksView.count === 0) {
-                    drop.acceptProposedAction()
-                    return
-                }
-
-                // Compute destination index from drop position
-                var y = drop.position.y
-                var indexAtPos = blocksView.indexAt(0, y)
-                var insertionIndex
-                if (indexAtPos < 0) {
-                    insertionIndex = blocksView.count
-                } else {
-                    var item = blocksView.itemAtIndex(indexAtPos)
-                    if (item) {
-                        var itemTop = item.y - blocksView.contentY
-                        var midpoint = itemTop + item.height / 2
-                        insertionIndex = y > midpoint ? indexAtPos + 1 : indexAtPos
-                    } else {
-                        insertionIndex = indexAtPos
-                    }
-                }
-
-                // Translate insertion index into final index for the model helper.
-                var finalIndex = insertionIndex
-                if (fromIndex < insertionIndex) {
-                    finalIndex = Math.min(blocksView.count - 1, insertionIndex - 1)
-                } else {
-                    finalIndex = Math.min(blocksView.count - 1, insertionIndex)
-                }
-
-                if (finalIndex < 0) {
-                    drop.acceptProposedAction()
-                    return
-                }
-
-                if (finalIndex === fromIndex) {
-                    drop.acceptProposedAction()
-                    return
-                }
-
-                // Copy when Ctrl held, otherwise move
-                var isCopy = (drop.keys & Qt.ControlModifier) !== 0
-                if (isCopy) {
-                    blocksView.requestCopy(fromIndex, finalIndex)
-                } else {
-                    blocksView.requestMove(fromIndex, finalIndex)
-                }
-                drop.acceptProposedAction()
-            }
-        }
+        // DropArea {
+        //     anchors.fill: parent
+        //
+        //     onDropped: (drop) => {
+        //         // Read the source index from mimeData
+        //         var from = drop.mimeData["application/x-item-index"]
+        //         var fromIndex = Number(from)
+        //         if (!isFinite(fromIndex)) {
+        //             drop.acceptProposedAction()
+        //             return
+        //         }
+        //
+        //         if (blocksView.count === 0) {
+        //             drop.acceptProposedAction()
+        //             return
+        //         }
+        //
+        //         // Compute destination index from drop position
+        //         var y = drop.position.y
+        //         var indexAtPos = blocksView.indexAt(0, y)
+        //         var insertionIndex
+        //         if (indexAtPos < 0) {
+        //             insertionIndex = blocksView.count
+        //         } else {
+        //             var item = blocksView.itemAtIndex(indexAtPos)
+        //             if (item) {
+        //                 var itemTop = item.y - blocksView.contentY
+        //                 var midpoint = itemTop + item.height / 2
+        //                 insertionIndex = y > midpoint ? indexAtPos + 1 : indexAtPos
+        //             } else {
+        //                 insertionIndex = indexAtPos
+        //             }
+        //         }
+        //
+        //         // Translate insertion index into final index for the model helper.
+        //         var finalIndex = insertionIndex
+        //         if (fromIndex < insertionIndex) {
+        //             finalIndex = Math.min(blocksView.count - 1, insertionIndex - 1)
+        //         } else {
+        //             finalIndex = Math.min(blocksView.count - 1, insertionIndex)
+        //         }
+        //
+        //         if (finalIndex < 0) {
+        //             drop.acceptProposedAction()
+        //             return
+        //         }
+        //
+        //         if (finalIndex === fromIndex) {
+        //             drop.acceptProposedAction()
+        //             return
+        //         }
+        //
+        //         // Copy when Ctrl held, otherwise move
+        //         var isCopy = (drop.keys & Qt.ControlModifier) !== 0
+        //         if (isCopy) {
+        //             blocksView.requestCopy(fromIndex, finalIndex)
+        //         } else {
+        //             blocksView.requestMove(fromIndex, finalIndex)
+        //         }
+        //         drop.acceptProposedAction()
+        //     }
+        // }
 
         Keys.onDeletePressed: {
             if (blocksView.currentIndex >= 0) {

@@ -2,7 +2,7 @@
 import QtQuick
 import QtQuick.Controls.Basic
 
-Rectangle {
+MouseArea {
     id: root
 
     property bool held: false // for mouse drag actions
@@ -11,28 +11,78 @@ Rectangle {
     required property int itemIndex
     required property ItemView listView
 
-    z: Drag.active ? 10 : 0
-    color: ListView.isCurrentItem ? "#3300FF00" : "transparent"  // semi-transparent fill
+    // z: Drag.active ? 10 : 0
+    // color: ListView.isCurrentItem ? "#3300FF00" : "transparent"  // semi-transparent fill
 
-    anchors {
-        left: parent?.left
-        right: parent?.right
+    width: parent ? parent.width : 0
+    height: content.height + 10
+
+    drag.target: held ? content : undefined
+    drag.axis: Drag.YAxis
+
+    onPressAndHold: held = true
+    onReleased: {
+        held = false
+        if (enabled) {
+            root.listView.currentIndex = root.itemIndex
+            // content.color = "white"
+        }
     }
 
-    // width: parent ? parent.width : 0
-    height: contourRect.height + 10
+    hoverEnabled: true
+    propagateComposedEvents: true
+
+    enabled: root.listView.parent.viewInteraction // && (root.listView.currentIndex !== root.itemIndex)
+    acceptedButtons: enabled ? Qt.LeftButton | Qt.RightButton : Qt.NoButton
+    preventStealing: enabled
+
+    // onPressed: if (enabled) content.color = "gray"
+    onEntered: if (enabled) content.pointerInside = true
+    onExited: if (enabled) content.pointerInside = false
+    onCanceled: content.pointerInside = false
+    onEnabledChanged: if (!enabled) content.pointerInside = false
 
     Rectangle {
-        id: contourRect
+        id: content
 
-        width: parent.width - 10
-        height: Math.max(left.height, rightColumn.height) + 10
         y: 5
         x: 5
-        radius: 5
-        border.color: "gray"
 
-        // contourRect stays above:
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            verticalCenter: parent.verticalCenter
+        }
+
+        height: Math.max(left.height, rightColumn.height) + 10
+        // height: column.implicitHeight + 4
+
+        // width: parent.width - 10
+        width: root.width - 10
+
+        border.width: 1
+        border.color: "lightsteelblue"
+        color: root.held ? "lightsteelblue" : "white"
+        radius: 5
+
+        Behavior on color { ColorAnimation { duration: 100 } }
+
+        states: State {
+            when: root.held
+
+            ParentChange {
+                target: content
+                parent: root.listView.parent
+            }
+            AnchorChanges {
+                target: content
+                anchors {
+                    horizontalCenter: undefined
+                    verticalCenter: undefined
+                }
+            }
+        }
+
+        // content stays above:
         z: 1
 
         // Left image
@@ -52,12 +102,12 @@ Rectangle {
         Row {
             id: cornerActions
             spacing: 6
-            anchors.top: contourRect.top
-            anchors.right: contourRect.right
+            anchors.top: content.top
+            anchors.right: content.right
             anchors.topMargin: 15
             anchors.rightMargin: 10
             z: 2
-            visible: contourRect.cornerActionsVisible
+            visible: content.cornerActionsVisible
             opacity: visible ? 1 : 0
             Behavior on opacity {
                 NumberAnimation {
@@ -72,9 +122,9 @@ Rectangle {
                 height: 18
 
                 // Position overlay exactly where the dots icon is
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.right: dragGripOverlay.left
-                anchors.rightMargin: 5
+                // anchors.verticalCenter: parent.verticalCenter
+                // anchors.right: dragGripOverlay.left
+                // anchors.rightMargin: 5
 
                 Image {
                     id: plusIcon
@@ -102,8 +152,8 @@ Rectangle {
                 height: 18
 
                 // Position overlay exactly where the dots icon is
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.right: parent.right
+                // anchors.verticalCenter: parent.verticalCenter
+                // anchors.right: parent.right
 
                 // Visible icon (not moved by handler)
                 Image {
@@ -156,29 +206,29 @@ Rectangle {
         property bool pointerInside: false
         readonly property bool cornerActionsVisible: pointerInside || actionPopup.visible || reorderHandler.active
 
-        MouseArea {
-            id: interactionArea
-            z: -1
-            anchors.fill: contourRect
-            anchors.margins: 0
-            hoverEnabled: true
-            propagateComposedEvents: true
-
-            // Completely disable reactions when selected
-            enabled: root.listView.parent.viewInteraction // && (root.listView.currentIndex !== root.itemIndex)
-            acceptedButtons: enabled ? Qt.LeftButton | Qt.RightButton : Qt.NoButton
-            preventStealing: enabled
-
-            onReleased: if (enabled) {
-                root.listView.currentIndex = root.itemIndex
-                contourRect.color = "white"
-            }
-            // onPressed: if (enabled) contourRect.color = "gray"
-            onEntered: if (enabled) contourRect.pointerInside = true
-            onExited: if (enabled) contourRect.pointerInside = false
-            onCanceled: contourRect.pointerInside = false
-            onEnabledChanged: if (!enabled) contourRect.pointerInside = false
-        }
+        // MouseArea {
+        //     id: interactionArea
+        //     z: -1
+        //     anchors.fill: content
+        //     anchors.margins: 0
+        //     hoverEnabled: true
+        //     propagateComposedEvents: true
+        //
+        //     // Completely disable reactions when selected
+        //     enabled: root.listView.parent.viewInteraction // && (root.listView.currentIndex !== root.itemIndex)
+        //     acceptedButtons: enabled ? Qt.LeftButton | Qt.RightButton : Qt.NoButton
+        //     preventStealing: enabled
+        //
+        //     onReleased: if (enabled) {
+        //         root.listView.currentIndex = root.itemIndex
+        //         content.color = "white"
+        //     }
+        //     // onPressed: if (enabled) content.color = "gray"
+        //     onEntered: if (enabled) content.pointerInside = true
+        //     onExited: if (enabled) content.pointerInside = false
+        //     onCanceled: content.pointerInside = false
+        //     onEnabledChanged: if (!enabled) content.pointerInside = false
+        // }
 
         // The popup opened by the plus icon
         Popup {
@@ -208,12 +258,12 @@ Rectangle {
     default property alias details: rightColumn.data
 
     // Provide drag meta so DropArea can accept and reorder
-    Drag.active: reorderHandler.active
-    Drag.source: root
-    Drag.hotSpot.x: reorderHandler.centroid.position.x    // use scene position of handler centroid
-    Drag.hotSpot.y: reorderHandler.centroid.position.y
-    Drag.mimeData: ({ "application/x-item-index": root.itemIndex })
-    Drag.dragType: Drag.Automatic
-    Drag.supportedActions: Qt.MoveAction | Qt.CopyAction
+    // Drag.active: reorderHandler.active
+    // Drag.source: root
+    // Drag.hotSpot.x: reorderHandler.centroid.position.x    // use scene position of handler centroid
+    // Drag.hotSpot.y: reorderHandler.centroid.position.y
+    // Drag.mimeData: ({ "application/x-item-index": root.itemIndex })
+    // Drag.dragType: Drag.Automatic
+    // Drag.supportedActions: Qt.MoveAction | Qt.CopyAction
     // (No Drag.dragDelegate here to avoid the error)
 }
