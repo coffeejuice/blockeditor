@@ -71,11 +71,16 @@ Item {
 
         // For the example only: perform the move/copy on the QML ListModel.
         onRequestMove: (sourceIndex, destinationIndex) => {
-            if (sourceIndex === destinationIndex || sourceIndex < 0 || destinationIndex < 0) return
-            // normalize target for "drop between" feel
-            var target = Math.max(0, Math.min(count - 1, destinationIndex))
-            if (sourceIndex < target) target -= 1
-            blocksView.model.moveRows(sourceIndex.parent, blocksView.currentIndex, 1, destinationIndex.parent, blocksView.currentIndex - 1)
+            let fromIndex = Number(sourceIndex)
+            let toIndex = Number(destinationIndex)
+            if (!isFinite(fromIndex) || !isFinite(toIndex)) return
+            if (fromIndex < 0 || toIndex < 0) return
+
+            let finalIndex = Math.max(0, Math.min(count - 1, toIndex))
+            if (finalIndex === fromIndex) return
+            if (blocksView.model.moveRowTo(fromIndex, finalIndex)) {
+                blocksView.currentIndex = finalIndex
+            }
         }
         onRequestCopy: (sourceIndex, destinationIndex) => {
             if (sourceIndex < 0 || destinationIndex < 0) return
@@ -91,22 +96,58 @@ Item {
             onDropped: (drop) => {
                 // Read the source index from mimeData
                 var from = drop.mimeData["application/x-item-index"]
-                if (from === undefined) {
+                var fromIndex = Number(from)
+                if (!isFinite(fromIndex)) {
+                    drop.acceptProposedAction()
+                    return
+                }
+
+                if (blocksView.count === 0) {
                     drop.acceptProposedAction()
                     return
                 }
 
                 // Compute destination index from drop position
                 var y = drop.position.y
-                var to = blocksView.indexAt(0, y)
-                if (to < 0) to = blocksView.count - 1
+                var indexAtPos = blocksView.indexAt(0, y)
+                var insertionIndex
+                if (indexAtPos < 0) {
+                    insertionIndex = blocksView.count
+                } else {
+                    var item = blocksView.itemAtIndex(indexAtPos)
+                    if (item) {
+                        var itemTop = item.y - blocksView.contentY
+                        var midpoint = itemTop + item.height / 2
+                        insertionIndex = y > midpoint ? indexAtPos + 1 : indexAtPos
+                    } else {
+                        insertionIndex = indexAtPos
+                    }
+                }
+
+                // Translate insertion index into final index for the model helper.
+                var finalIndex = insertionIndex
+                if (fromIndex < insertionIndex) {
+                    finalIndex = Math.min(blocksView.count - 1, insertionIndex - 1)
+                } else {
+                    finalIndex = Math.min(blocksView.count - 1, insertionIndex)
+                }
+
+                if (finalIndex < 0) {
+                    drop.acceptProposedAction()
+                    return
+                }
+
+                if (finalIndex === fromIndex) {
+                    drop.acceptProposedAction()
+                    return
+                }
 
                 // Copy when Ctrl held, otherwise move
                 var isCopy = (drop.keys & Qt.ControlModifier) !== 0
                 if (isCopy) {
-                    blocksView.requestCopy(from, to)
+                    blocksView.requestCopy(fromIndex, finalIndex)
                 } else {
-                    blocksView.requestMove(from, to)
+                    blocksView.requestMove(fromIndex, finalIndex)
                 }
                 drop.acceptProposedAction()
             }
@@ -140,17 +181,17 @@ Item {
 
         Keys.onUpPressed: {
             if (blocksView.count > 1 || blocksView.currentIndex > 0) {
-                let sourceIndex = blocksView.model.index(blocksView.currentIndex, 0)
-                let destinationIndex = blocksView.model.index(blocksView.currentIndex - 1, 0)
-                blocksView.model.moveRows(sourceIndex.parent, blocksView.currentIndex, 1, destinationIndex.parent, blocksView.currentIndex - 1)
+                if (blocksView.model.moveRowTo(blocksView.currentIndex, blocksView.currentIndex - 1)) {
+                    blocksView.currentIndex = Math.max(0, blocksView.currentIndex - 1)
+                }
             }
         }
 
         Keys.onDownPressed: {
             if (blocksView.count > 1 || blocksView.currentIndex < (blocksView.count - 1)) {
-                let sourceIndex = blocksView.model.index(blocksView.currentIndex, 0)
-                let destinationIndex = blocksView.model.index(blocksView.currentIndex + 1, 0)
-                blocksView.model.moveRows(sourceIndex.parent, blocksView.currentIndex, 1, destinationIndex.parent, blocksView.currentIndex + 1)
+                if (blocksView.model.moveRowTo(blocksView.currentIndex, blocksView.currentIndex + 1)) {
+                    blocksView.currentIndex = Math.min(blocksView.count - 1, blocksView.currentIndex + 1)
+                }
             }
         }
 

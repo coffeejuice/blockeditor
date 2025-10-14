@@ -79,6 +79,7 @@ public:
 
     Q_INVOKABLE bool insertRows(int row, int count, const QModelIndex &parent) override;
     Q_INVOKABLE bool moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationRow) override;
+    Q_INVOKABLE bool moveRowTo(int sourceRow, int destinationRow);
     Q_INVOKABLE bool removeRows(int row, int count, const QModelIndex &parent) override;
     Q_INVOKABLE bool clearModel(int rowNumber);
 
