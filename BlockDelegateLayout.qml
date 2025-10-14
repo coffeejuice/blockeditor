@@ -4,14 +4,22 @@ import QtQuick.Controls.Basic
 
 Rectangle {
     id: root
+
+    property bool held: false // for mouse drag actions
+
     required property var imageIndex
     required property int itemIndex
     required property ItemView listView
 
-    z: 0
+    z: Drag.active ? 10 : 0
     color: ListView.isCurrentItem ? "#3300FF00" : "transparent"  // semi-transparent fill
 
-    width: parent ? parent.width : 0
+    anchors {
+        left: parent?.left
+        right: parent?.right
+    }
+
+    // width: parent ? parent.width : 0
     height: contourRect.height + 10
 
     Rectangle {
@@ -46,8 +54,8 @@ Rectangle {
             spacing: 6
             anchors.top: contourRect.top
             anchors.right: contourRect.right
-            anchors.topMargin: 5
-            anchors.rightMargin: 5
+            anchors.topMargin: 15
+            anchors.rightMargin: 10
             z: 2
             visible: contourRect.cornerActionsVisible
             opacity: visible ? 1 : 0
@@ -58,13 +66,24 @@ Rectangle {
                 }
             }
 
-            Image {
-                id: plusIcon
-                source: Qt.resolvedUrl("assets/plus.svg")
-                width: 24; height: 24
-                fillMode: Image.PreserveAspectFit
-                smooth: true
-                antialiasing: true
+            Item {
+                id: plusIconOverlay
+                width: 18
+                height: 18
+
+                // Position overlay exactly where the dots icon is
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: dragGripOverlay.left
+                anchors.rightMargin: 5
+
+                Image {
+                    id: plusIcon
+                    anchors.fill: parent
+                    source: Qt.resolvedUrl("assets/plus.svg")
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    antialiasing: true
+                }
 
                 TapHandler {
                     acceptedButtons: Qt.LeftButton
@@ -75,21 +94,45 @@ Rectangle {
                 }
             }
 
-            Image {
-                id: dotsIcon
-                source: Qt.resolvedUrl("assets/dots.svg")
-                width: 18; height: 18
-                fillMode: Image.PreserveAspectFit
-                smooth: true
-                antialiasing: true
+            // Transparent overlay exactly on top of the dots icon to capture drag,
+            // so the visible icon never moves.
+            Item {
+                id: dragGripOverlay
+                width: 18
+                height: 18
 
+                // Position overlay exactly where the dots icon is
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: parent.right
+
+                // Visible icon (not moved by handler)
+                Image {
+                    id: dotsIcon
+                    anchors.fill: parent
+                    source: Qt.resolvedUrl("assets/dots.svg")
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    antialiasing: true
+                }
+
+                // Capture drag on the overlay only
                 DragHandler {
                     id: reorderHandler
-                    target: target
+                    target: null    // do not move any visual item
                     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchScreen
                     acceptedButtons: Qt.LeftButton
                     grabPermissions: PointerHandler.CanTakeOverFromAnything
                     cursorShape: active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+
+                    onActiveChanged: {
+                        if (active) {
+                            root.Drag.start()
+                        } else {
+                            root.Drag.drop()
+                            // Ensure no accumulated translation on overlay
+                            reorderHandler.translation = Qt.point(0, 0)
+                        }
+                    }
                 }
             }
         }
@@ -164,11 +207,13 @@ Rectangle {
     // Anything you put inside BlockRow becomes a child of rightColumn
     default property alias details: rightColumn.data
 
+    // Provide drag meta so DropArea can accept and reorder
     Drag.active: reorderHandler.active
     Drag.source: root
-    Drag.hotSpot.x: reorderHandler.centroid.relativePosition.x * root.width
-    Drag.hotSpot.y: reorderHandler.centroid.relativePosition.y * root.height
+    Drag.hotSpot.x: reorderHandler.centroid.position.x    // use scene position of handler centroid
+    Drag.hotSpot.y: reorderHandler.centroid.position.y
     Drag.mimeData: ({ "application/x-item-index": root.itemIndex })
     Drag.dragType: Drag.Automatic
     Drag.supportedActions: Qt.MoveAction | Qt.CopyAction
+    // (No Drag.dragDelegate here to avoid the error)
 }

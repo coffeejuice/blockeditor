@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 import QtCore
-import Qt.labs.platform as Labs
+// import Qt.labs.platform as Labs
 import blockeditor
 
 ApplicationWindow {
