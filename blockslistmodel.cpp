@@ -29,9 +29,14 @@ BlocksListModel::BlocksListModel(QObject* parent) : QAbstractListModel(parent) {
         "Inconel718",
         "10",
         "2000",
-        {"image0.jpg","image1.jpg","image2.jpg"},
-        {"image3.jpg","image4.jpg","image5.jpg"},
-        {"image6.jpg","image7.jpg","image8.jpg","image9.jpg"},
+        {
+            "rectangle_off.svg","rectangle_on.svg",
+            "square_off.svg","square_on.svg",
+            "octagon_off.svg","octagon_on.svg",
+            "polygon16_off.svg","polygon16_on.svg",
+            "round_off.svg","round_off.svg"},
+        {"square_chamfers_sharp_off.svg","square_chamfers_equal_off.svg","square_chamfers_different_off.svg"},
+        {"square_chamfers_sharp_on.svg","square_chamfers_equal_on.svg","square_chamfers_different_on.svg"},
         0,
         1,
         2
