@@ -47,6 +47,16 @@ qt_add_qml_module(appblockeditor
         assets/check_list_bw.svg
         assets/plus.svg
         assets/dots.svg
+        assets/rectangle_off.svg
+        assets/rectangle_on.svg
+        assets/square_off.svg
+        assets/square_on.svg
+        assets/octagon_off.svg
+        assets/octagon_on.svg
+        assets/polygon16_off.svg
+        assets/polygon16_on.svg
+        assets/round_off.svg
+        assets/round_on.svg
     SOURCES
         blockslistmodel.h
         blockslistmodel.cpp
