@@ -35,7 +35,7 @@ Rectangle {
             Image {
                 anchors.fill: parent
                 fillMode: Image.PreserveAspectFit
-                source: Qt.resolvedUrl("assets/" + "plus.svg") // root.imageIndex)
+                source: Qt.resolvedUrl("assets/" + root.imageIndex)
                 smooth: true
             }
 
@@ -48,24 +48,24 @@ Rectangle {
                 anchors.right: contourRect.right
                 anchors.topMargin: 5
                 anchors.rightMargin: 5
-                // visible: true // cornerActionsEnabled
-                // enabled: true // cornerActionsEnabled
+                visible: true // cornerActionsEnabled
+                enabled: true // cornerActionsEnabled
 
                 // + icon -> opens popup
                 Image {
                     id: plusIcon
                     source: "plus.svg"      // ensure your SVG plugin is available
                     width: 25; height: 25
-                    // fillMode: Image.PreserveAspectFit
-                    // smooth: true
-                    // antialiasing: true
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    antialiasing: true
 
-                    // MouseArea {
-                    //     anchors.fill: parent
-                    //     onClicked: actionPopup.open()
-                    //     hoverEnabled: true
-                    //     cursorShape: Qt.PointingHandCursor
-                    // }
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: actionPopup.open()
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                    }
                 }
 
                 // ⋯ icon -> drag handle (move/copy with Ctrl)
@@ -73,45 +73,45 @@ Rectangle {
                     id: dotsIcon
                     source: "dots.svg"
                     width: 10; height: 10
-                    // fillMode: Image.PreserveAspectFit
-                    // smooth: true
-                    // antialiasing: true
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    antialiasing: true
 
-                    // We use DragHandler as the gesture recognizer.
-                    // DragHandler {
-                    //     id: dotsDrag
-                    //     target: null                // don't physically move the delegate
-                    //     onActiveChanged: {
-                    //         if (active) {
-                    //             // Start QML Drag from the delegate
-                    //             delegateRoot.Drag.supportedActions =
-                    //                 (Qt.application.keyboardModifiers & Qt.ControlModifier)
-                    //                     ? Qt.CopyAction : Qt.MoveAction
-                    //             delegateRoot.Drag.active = true
-                    //         } else {
-                    //             delegateRoot.Drag.active = false
-                    //         }
-                    //     }
-                    //     grabPermissions: PointerHandler.CanTakeOverFromAnything
-                    //     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchScreen
-                    // }
+                    We use DragHandler as the gesture recognizer.
+                    DragHandler {
+                        id: dotsDrag
+                        target: null                // don't physically move the delegate
+                        onActiveChanged: {
+                            if (active) {
+                                // Start QML Drag from the delegate
+                                delegateRoot.Drag.supportedActions =
+                                    (Qt.application.keyboardModifiers & Qt.ControlModifier)
+                                        ? Qt.CopyAction : Qt.MoveAction
+                                delegateRoot.Drag.active = true
+                            } else {
+                                delegateRoot.Drag.active = false
+                            }
+                        }
+                        grabPermissions: PointerHandler.CanTakeOverFromAnything
+                        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchScreen
+                    }
 
-                    // Attach drag meta to the delegate
-                    // Drag.active: false
-                    // Drag.source: delegateRoot
-                    // Drag.hotSpot.x: width / 2
-                    // Drag.hotSpot.y: height / 2
-                    // // Send the source index through mimeData
-                    // Drag.mimeData: ({ "application/x-item-index": index })
-                    // Drag.dragType: Drag.Automatic
-                    //
-                    // // Visual cue for draggability
-                    // TapHandler {
-                    //     acceptedButtons: Qt.LeftButton
-                    //     onPressedChanged: if (pressed) dotsIcon.opacity = 0.6
-                    //     onTapped: dotsIcon.opacity = 1.0
-                    //     onCanceled: dotsIcon.opacity = 1.0
-                    // }
+                    Attach drag meta to the delegate
+                    Drag.active: false
+                    Drag.source: delegateRoot
+                    Drag.hotSpot.x: width / 2
+                    Drag.hotSpot.y: height / 2
+                    // Send the source index through mimeData
+                    Drag.mimeData: ({ "application/x-item-index": index })
+                    Drag.dragType: Drag.Automatic
+
+                    // Visual cue for draggability
+                    TapHandler {
+                        acceptedButtons: Qt.LeftButton
+                        onPressedChanged: if (pressed) dotsIcon.opacity = 0.6
+                        onTapped: dotsIcon.opacity = 1.0
+                        onCanceled: dotsIcon.opacity = 1.0
+                    }
                 }
             }
 
