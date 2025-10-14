@@ -57,6 +57,12 @@ qt_add_qml_module(appblockeditor
         assets/polygon16_on.svg
         assets/round_off.svg
         assets/round_on.svg
+        assets/square_chamfers_sharp_off.svg
+        assets/square_chamfers_sharp_off.svg
+        assets/square_chamfers_equal_off.svg
+        assets/square_chamfers_equal_on.svg
+        assets/square_chamfers_different_off.svg
+        assets/square_chamfers_different_on.svg
     SOURCES
         blockslistmodel.h
         blockslistmodel.cpp
