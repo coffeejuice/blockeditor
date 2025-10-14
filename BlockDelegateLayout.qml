@@ -38,83 +38,60 @@ Rectangle {
                 source: Qt.resolvedUrl("assets/" + root.imageIndex)
                 smooth: true
             }
+        }
 
-            // Corner action row (plus + dots)
-            Row {
-                id: cornerActions
-                // z: 3
-                spacing: 6
-                anchors.top: contourRect.top
-                anchors.right: contourRect.right
-                anchors.topMargin: 5
-                anchors.rightMargin: 5
-                visible: true // cornerActionsEnabled
-                enabled: true // cornerActionsEnabled
-
-                // + icon -> opens popup
-                Image {
-                    id: plusIcon
-                    source: "plus.svg"      // ensure your SVG plugin is available
-                    width: 25; height: 25
-                    fillMode: Image.PreserveAspectFit
-                    smooth: true
-                    antialiasing: true
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: actionPopup.open()
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                    }
-                }
-
-                // ⋯ icon -> drag handle (move/copy with Ctrl)
-                Image {
-                    id: dotsIcon
-                    source: "dots.svg"
-                    width: 10; height: 10
-                    fillMode: Image.PreserveAspectFit
-                    smooth: true
-                    antialiasing: true
-
-                    We use DragHandler as the gesture recognizer.
-                    DragHandler {
-                        id: dotsDrag
-                        target: null                // don't physically move the delegate
-                        onActiveChanged: {
-                            if (active) {
-                                // Start QML Drag from the delegate
-                                delegateRoot.Drag.supportedActions =
-                                    (Qt.application.keyboardModifiers & Qt.ControlModifier)
-                                        ? Qt.CopyAction : Qt.MoveAction
-                                delegateRoot.Drag.active = true
-                            } else {
-                                delegateRoot.Drag.active = false
-                            }
-                        }
-                        grabPermissions: PointerHandler.CanTakeOverFromAnything
-                        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchScreen
-                    }
-
-                    Attach drag meta to the delegate
-                    Drag.active: false
-                    Drag.source: delegateRoot
-                    Drag.hotSpot.x: width / 2
-                    Drag.hotSpot.y: height / 2
-                    // Send the source index through mimeData
-                    Drag.mimeData: ({ "application/x-item-index": index })
-                    Drag.dragType: Drag.Automatic
-
-                    // Visual cue for draggability
-                    TapHandler {
-                        acceptedButtons: Qt.LeftButton
-                        onPressedChanged: if (pressed) dotsIcon.opacity = 0.6
-                        onTapped: dotsIcon.opacity = 1.0
-                        onCanceled: dotsIcon.opacity = 1.0
-                    }
+        // Corner action row (plus + dots)
+        Row {
+            id: cornerActions
+            spacing: 6
+            anchors.top: contourRect.top
+            anchors.right: contourRect.right
+            anchors.topMargin: 5
+            anchors.rightMargin: 5
+            z: 2
+            visible: contourRect.cornerActionsVisible
+            opacity: visible ? 1 : 0
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 120
+                    easing.type: Easing.OutQuad
                 }
             }
 
+            Image {
+                id: plusIcon
+                source: Qt.resolvedUrl("assets/plus.svg")
+                width: 24; height: 24
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                antialiasing: true
+
+                TapHandler {
+                    acceptedButtons: Qt.LeftButton
+                    gesturePolicy: TapHandler.DragThreshold
+                    onTapped: actionPopup.open()
+                    onPressedChanged: plusIcon.opacity = pressed ? 0.7 : 1
+                    cursorShape: Qt.PointingHandCursor
+                }
+            }
+
+            Image {
+                id: dotsIcon
+                source: Qt.resolvedUrl("assets/dots.svg")
+                width: 18; height: 18
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                antialiasing: true
+
+                DragHandler {
+                    id: reorderHandler
+                    target: null
+                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchScreen
+                    acceptedButtons: Qt.LeftButton
+                    grabPermissions: PointerHandler.CanTakeOverFromAnything
+                    cursorShape: active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                }
+            }
         }
 
         // Right content
@@ -133,9 +110,11 @@ Rectangle {
             }
         }
 
-        property bool cornerActionsEnabled
+        property bool pointerInside: false
+        readonly property bool cornerActionsVisible: pointerInside || actionPopup.visible || reorderHandler.active
 
         MouseArea {
+            id: interactionArea
             z: -1
             anchors.fill: contourRect
             anchors.margins: 0
@@ -152,8 +131,10 @@ Rectangle {
                 contourRect.color = "white"
             }
             // onPressed: if (enabled) contourRect.color = "gray"
-            onEntered: if (enabled) cornerActionsEnabled = true
-            onExited: if (enabled) cornerActionsEnabled = false
+            onEntered: if (enabled) contourRect.pointerInside = true
+            onExited: if (enabled) contourRect.pointerInside = false
+            onCanceled: contourRect.pointerInside = false
+            onEnabledChanged: if (!enabled) contourRect.pointerInside = false
         }
 
         // The popup opened by the plus icon
@@ -177,8 +158,17 @@ Rectangle {
                 }
             }
         }
+
     }
 
     // Anything you put inside BlockRow becomes a child of rightColumn
     default property alias details: rightColumn.data
+
+    Drag.active: reorderHandler.active
+    Drag.source: root
+    Drag.hotSpot.x: reorderHandler.centroid.position.x
+    Drag.hotSpot.y: reorderHandler.centroid.position.y
+    Drag.mimeData: ({ "application/x-item-index": root.itemIndex })
+    Drag.dragType: Drag.Automatic
+    Drag.supportedActions: Qt.MoveAction | Qt.CopyAction
 }
