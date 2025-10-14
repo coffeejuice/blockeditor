@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <utility>
 #include "blockslistmodel.h"
 #include <QDir>
@@ -378,29 +379,44 @@ bool BlocksListModel::insertRows(int row, int count, const QModelIndex &parent) 
 }
 
 bool BlocksListModel::moveRows(const QModelIndex &sourceParent, const int sourceRow, int count, const QModelIndex &destinationParent, const int destinationRow) {
-    int newDestination = destinationRow;
-    if (sourceRow < destinationRow)
-        newDestination++;
+    if (count <= 0) return false;
+    if (sourceParent != destinationParent) return false;
 
-    beginMoveRows(sourceParent, sourceRow, sourceRow, destinationParent, newDestination);
+    const int total = static_cast<int>(m_blocks.size());
+    if (sourceRow < 0 || sourceRow + count > total) return false;
+    if (destinationRow < 0 || destinationRow > total) return false;
 
+    // When moving "down", destinationRow refers to the position *before* removal,
+    // so it must be strictly greater than the moved block's range. When moving up,
+    // it must not fall inside the source range either.
+    if (destinationRow >= sourceRow && destinationRow <= sourceRow + count) return false;
+
+    beginMoveRows(sourceParent, sourceRow, sourceRow + count - 1, destinationParent, destinationRow);
+
+    auto first = m_blocks.begin();
     if (sourceRow < destinationRow) {
-        std::rotate(
-            m_blocks.begin() + sourceRow,
-            m_blocks.begin() + sourceRow + 1,
-            m_blocks.begin() + destinationRow + 1
-        );
+        std::rotate(first + sourceRow, first + sourceRow + count, first + destinationRow);
     } else {
-        std::rotate(
-            m_blocks.begin() + destinationRow,
-            m_blocks.begin() + sourceRow,
-            m_blocks.begin() + sourceRow + 1
-        );
+        std::rotate(first + destinationRow, first + sourceRow, first + sourceRow + count);
     }
 
     endMoveRows();
     updateDocumentCache();
     return true;
+}
+
+bool BlocksListModel::moveRowTo(const int sourceRow, int destinationRow) {
+    const int total = static_cast<int>(m_blocks.size());
+    if (sourceRow < 0 || sourceRow >= total) return false;
+    if (total <= 1) return false;
+
+    if (destinationRow < 0) destinationRow = 0;
+    if (destinationRow >= total) destinationRow = total - 1;
+
+    if (destinationRow == sourceRow) return false;
+
+    const int insertionIndex = (sourceRow < destinationRow) ? destinationRow + 1 : destinationRow;
+    return moveRows({}, sourceRow, 1, {}, insertionIndex);
 }
 
 bool BlocksListModel::removeRows(const int row, const int count, const QModelIndex &parent) {
