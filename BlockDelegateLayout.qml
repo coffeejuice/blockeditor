@@ -85,7 +85,7 @@ Rectangle {
 
                 DragHandler {
                     id: reorderHandler
-                    target: null
+                    target: target
                     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchScreen
                     acceptedButtons: Qt.LeftButton
                     grabPermissions: PointerHandler.CanTakeOverFromAnything
@@ -122,7 +122,7 @@ Rectangle {
             propagateComposedEvents: true
 
             // Completely disable reactions when selected
-            enabled: root.listView.parent.viewInteraction && (root.listView.currentIndex !== root.itemIndex)
+            enabled: root.listView.parent.viewInteraction // && (root.listView.currentIndex !== root.itemIndex)
             acceptedButtons: enabled ? Qt.LeftButton | Qt.RightButton : Qt.NoButton
             preventStealing: enabled
 
@@ -166,8 +166,8 @@ Rectangle {
 
     Drag.active: reorderHandler.active
     Drag.source: root
-    Drag.hotSpot.x: reorderHandler.centroid.position.x
-    Drag.hotSpot.y: reorderHandler.centroid.position.y
+    Drag.hotSpot.x: reorderHandler.centroid.relativePosition.x * root.width
+    Drag.hotSpot.y: reorderHandler.centroid.relativePosition.y * root.height
     Drag.mimeData: ({ "application/x-item-index": root.itemIndex })
     Drag.dragType: Drag.Automatic
     Drag.supportedActions: Qt.MoveAction | Qt.CopyAction
