@@ -10,6 +10,8 @@ MouseArea {
     required property var imageIndex
     required property int itemIndex
     required property ItemView listView
+    // Expose live index for drag source and hover target resolution
+    readonly property int liveIndex: (listView ? listView.indexAt(0, content.y + content.height / 2) : itemIndex)
 
     // z: Drag.active ? 10 : 0
     // color: ListView.isCurrentItem ? "#3300FF00" : "transparent"  // semi-transparent fill
@@ -45,27 +47,8 @@ MouseArea {
     Rectangle {
         id: content
 
-        y: 5
-        x: 5
-
-        anchors {
-            horizontalCenter: parent.horizontalCenter
-            verticalCenter: parent.verticalCenter
-        }
-
-        height: Math.max(left.height, rightColumn.height) + 10
-        // height: column.implicitHeight + 4
-
-        // width: parent.width - 10
-        width: root.width - 10
-
-        border.width: 1
-        border.color: "lightsteelblue"
-        color: root.held ? "lightsteelblue" : "white"
-        radius: 5
-
-        Behavior on color { ColorAnimation { duration: 100 } }
-
+        property bool pointerInside: false
+        readonly property bool cornerActionsVisible: pointerInside || actionPopup.visible || reorderHandler.active
         states: State {
             when: root.held
 
@@ -82,8 +65,42 @@ MouseArea {
             }
         }
 
-        // content stays above:
+        // Provide drag meta so DropArea can accept and reorder
+        Drag.active: root.held
+        Drag.source: root
+        Drag.hotSpot.x: width / 2 // reorderHandler.centroid.position.x    // use scene position of handler centroid
+        Drag.hotSpot.y: height / 2 // reorderHandler.centroid.position.y
+        // Drag.mimeData: ({ "application/x-item-index": root.itemIndex })
+        // Drag.dragType: Drag.Automatic
+        // Drag.supportedActions: Qt.MoveAction | Qt.CopyAction
+        // (No Drag.dragDelegate here to avoid the error)
+
+        DropArea {
+            anchors {
+                fill: parent
+                margins: 10}
+            // QAbstractItemModel-based move during a drag enter over a delegate
+            onEntered: (drag) => {
+                const from = drag.source.index              // row of the dragged item (expose this on the drag source)
+                const to = root.itemIndex                   // row of the hovered item (already available)
+                if (from === undefined || to === undefined) return
+                root.listView.model.moveRowTo(from, to)     // call your model’s move helper
+            }
+        }
+
         z: 1
+        x: 5; y: 5
+        anchors {
+            horizontalCenter: parent.horizontalCenter;
+            verticalCenter: parent.verticalCenter}
+        height: Math.max(left.height, rightColumn.height) + 10
+        width: root.width - 10
+
+        border.width: 1
+        border.color: "lightsteelblue"
+        color: root.held ? "lightsteelblue" : "white"
+        radius: 5
+        Behavior on color { ColorAnimation { duration: 100 } }
 
         // Left image
         Rectangle {
@@ -96,6 +113,12 @@ MouseArea {
                 source: Qt.resolvedUrl("assets/" + root.imageIndex)
                 smooth: true
             }
+            Rectangle {
+                width: 10; height: 20
+                color: "white"
+                Label {anchors.top: parent.top; anchors.left: parent.left; text: itemIndex}
+            }
+
         }
 
         // Corner action row (plus + dots)
@@ -203,9 +226,6 @@ MouseArea {
             }
         }
 
-        property bool pointerInside: false
-        readonly property bool cornerActionsVisible: pointerInside || actionPopup.visible || reorderHandler.active
-
         // MouseArea {
         //     id: interactionArea
         //     z: -1
@@ -254,16 +274,6 @@ MouseArea {
 
     }
 
-    // Anything you put inside BlockRow becomes a child of rightColumn
+    // Anything you put inside BlockDelegate_*.qml files becomes a child of rightColumn
     default property alias details: rightColumn.data
-
-    // Provide drag meta so DropArea can accept and reorder
-    // Drag.active: reorderHandler.active
-    // Drag.source: root
-    // Drag.hotSpot.x: reorderHandler.centroid.position.x    // use scene position of handler centroid
-    // Drag.hotSpot.y: reorderHandler.centroid.position.y
-    // Drag.mimeData: ({ "application/x-item-index": root.itemIndex })
-    // Drag.dragType: Drag.Automatic
-    // Drag.supportedActions: Qt.MoveAction | Qt.CopyAction
-    // (No Drag.dragDelegate here to avoid the error)
 }
