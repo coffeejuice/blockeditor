@@ -1,3 +1,4 @@
+// BlockDelegate_Header.qml
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
