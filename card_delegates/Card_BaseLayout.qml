@@ -1,4 +1,4 @@
-// BlockDelegateLayout.qml
+// Card_BaseLayout.qml
 import QtQuick
 import QtQuick.Controls.Basic
 
@@ -11,7 +11,7 @@ Rectangle {
     required property int itemIndex
     required property ItemView listView
 
-    // Anything you put inside BlockDelegate_*.qml files becomes a child of rightColumn
+    // Anything you put inside Card_*.qml files becomes a child of rightColumn
     default property alias details: rightColumn.data
 
     width: parent ? parent.width : 0
@@ -107,7 +107,7 @@ Rectangle {
             Image {
                 anchors.fill: parent
                 fillMode: Image.PreserveAspectFit
-                source: Qt.resolvedUrl("assets/" + root.imageIndex)
+                source: Qt.resolvedUrl("../assets/" + root.imageIndex)
                 smooth: true
             }
             Rectangle {
@@ -149,7 +149,7 @@ Rectangle {
                 Image {
                     id: plusIcon
                     anchors.fill: parent
-                    source: Qt.resolvedUrl("assets/plus.svg")
+                    source: Qt.resolvedUrl("../assets/plus.svg")
                     fillMode: Image.PreserveAspectFit
                     smooth: true
                     antialiasing: true
@@ -179,7 +179,7 @@ Rectangle {
                 Image {
                     id: dotsIcon
                     anchors.fill: parent
-                    source: Qt.resolvedUrl("assets/dots.svg")
+                    source: Qt.resolvedUrl("../assets/dots.svg")
                     fillMode: Image.PreserveAspectFit
                     smooth: true
                     antialiasing: true

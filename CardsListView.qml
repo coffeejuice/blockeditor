@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 
-import blockeditor
+import cardmix
 
 /*
 Controls
@@ -45,19 +45,19 @@ Item {
         delegate: DelegateChooser {
             role: "type" // C++ must expose this role
 
-            DelegateChoice { roleValue: "document";    delegate: BlockDelegate_Document {} }
-            DelegateChoice { roleValue: "block";       delegate: BlockDelegate_Block {}}
-            DelegateChoice { roleValue: "heat";        delegate: BlockDelegate_Heat {} }
-            DelegateChoice { roleValue: "upset";       delegate: BlockDelegate_Upset {} }
-            DelegateChoice { roleValue: "draw";        delegate: BlockDelegate_Draw {} }
+            DelegateChoice { roleValue: "document";    delegate: Card_Document {} }
+            DelegateChoice { roleValue: "block";       delegate: Card_Block {}}
+            DelegateChoice { roleValue: "heat";        delegate: Card_Heat {} }
+            DelegateChoice { roleValue: "upset";       delegate: Card_Upset {} }
+            DelegateChoice { roleValue: "draw";        delegate: Card_Draw {} }
             // optional fallback
-            DelegateChoice { delegate: BlockDelegate_Unknown {} }
+            DelegateChoice { delegate: Card_Unknown {} }
         }
 
-        header: BlockDelegate_Header {}
+        header: Card_Header {}
         headerPositioning: ListView.OverlayHeader
 
-        footer: BlockDelegate_Footer {}
+        footer: Card_Footer {}
 
         highlightFollowsCurrentItem: true
         highlight: blocksHighlight

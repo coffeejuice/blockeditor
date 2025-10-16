@@ -1,11 +1,11 @@
-// BlockDelegate_Document.qml
+// Card_Document.qml
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 
-import blockeditor
+import cardmix
 
-BlockDelegateLayout {
+Card_BaseLayout {
     id: root
     // required property var blockContent
     // required property var listModel
@@ -88,7 +88,7 @@ BlockDelegateLayout {
                     Image {
                         anchors.fill: parent
                         fillMode: Image.PreserveAspectFit
-                        source: Qt.resolvedUrl("assets/" + modelData)
+                        source: Qt.resolvedUrl("../assets/" + modelData)
                         smooth: true
                     }
                     MouseArea {
@@ -124,7 +124,7 @@ BlockDelegateLayout {
                     Image {
                         anchors.fill: parent
                         fillMode: Image.PreserveAspectFit
-                        source: Qt.resolvedUrl("assets/" + modelData)
+                        source: Qt.resolvedUrl("../assets/" + modelData)
                         smooth: true
                     }
                     MouseArea {
@@ -160,7 +160,7 @@ BlockDelegateLayout {
                     Image {
                         anchors.fill: parent
                         fillMode: Image.PreserveAspectFit
-                        source: Qt.resolvedUrl("assets/" + modelData)
+                        source: Qt.resolvedUrl("../assets/" + modelData)
                         smooth: true
                     }
                     MouseArea {

@@ -1,9 +1,9 @@
-// BlockDelegate_Header.qml
+// Card_Header.qml
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 
-import blockeditor
+import cardmix
 
 Rectangle {
     id: root
@@ -39,7 +39,7 @@ Rectangle {
             Image {
                 anchors.fill: parent
                 fillMode: Image.PreserveAspectFit
-                source: Qt.resolvedUrl("assets/" + root.imageIndex)
+                source: Qt.resolvedUrl("../assets/" + root.imageIndex)
                 smooth: true
             }
         }

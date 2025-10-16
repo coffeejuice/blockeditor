@@ -1,19 +1,17 @@
-// blocks.h
-#ifndef BLOCKS_H
-#define BLOCKS_H
+// visualcards.h
+#ifndef VISUALCARDS_H
+#define VISUALCARDS_H
 
 #include <QAbstractListModel>
-#include <QObject>
-#include <QQmlEngine>
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QVariantMap>
 #include <memory>
 
 // ===================== Polymorphic base =====================
-class BaseBlock {
+class BaseCard {
 public:
-    virtual ~BaseBlock() = default;
+    virtual ~BaseCard() = default;
 
     // identity
     [[nodiscard]] virtual QString type() const = 0;
@@ -40,13 +38,13 @@ public:
     // payload assignment used by Qt.EditRole
     virtual void assignFromMap(const QVariantMap& content) = 0;
 
-    // factory helper: returns unique_ptr<BaseBlock> or nullptr if type not matched
-    static std::unique_ptr<BaseBlock> makeFromEditPayload(const QVariantMap& obj);
+    // factory helper: returns unique_ptr<BaseCard> or nullptr if type not matched
+    static std::unique_ptr<BaseCard> makeFromEditPayload(const QVariantMap& obj);
 };
 
 // ===================== Concrete types =====================
 
-class DocumentBlock final : public BaseBlock {
+class DocumentBlock final : public BaseCard {
 public:
     QString name, material_id, mesh_elements, weight;
     QStringList aList, bList, cList;
@@ -138,7 +136,7 @@ public:
     }
 };
 
-class BlockBlock final : public BaseBlock {
+class BlockBlock final : public BaseCard {
 public:
     QString name, press_id, die_assembly_id, top_die_id, bottom_die_id,
             feed_direction_id, feed_first, feed_middle, feed_last,
@@ -206,7 +204,7 @@ public:
     }
 };
 
-class HeatBlock final : public BaseBlock {
+class HeatBlock final : public BaseCard {
 public:
     QString name, timeUnits, typeTimeTemperature;
 
@@ -236,7 +234,7 @@ public:
     }
 };
 
-class UpsetBlock final : public BaseBlock {
+class UpsetBlock final : public BaseCard {
 public:
     QString operations;
 
@@ -256,7 +254,7 @@ public:
     }
 };
 
-class DrawBlock final : public BaseBlock {
+class DrawBlock final : public BaseCard {
 public:
     QString operations;
 
@@ -276,4 +274,4 @@ public:
     }
 };
 
-#endif // BLOCKS_H
+#endif // VISUALCARDS_H

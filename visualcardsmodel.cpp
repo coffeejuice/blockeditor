@@ -1,18 +1,19 @@
-// blockslistmodel.cpp
+// visualcardsmodel.cpp
 #include <algorithm>
 #include <utility>
-#include "blockslistmodel.h"
 #include <QDir>
 #include <QUrl>
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonArray>
 
+#include "visualcardsmodel.h"
+
 // ===================== Base factory =====================
-std::unique_ptr<BaseBlock> BaseBlock::makeFromEditPayload(const QVariantMap& obj) {
+std::unique_ptr<BaseCard> BaseCard::makeFromEditPayload(const QVariantMap& obj) {
     const auto t = obj.value("type").toString();
     const auto content = obj.value("content").toMap();
-    std::unique_ptr<BaseBlock> p;
+    std::unique_ptr<BaseCard> p;
     if (t == "document") p = std::make_unique<DocumentBlock>();
     else if (t == "block") p = std::make_unique<BlockBlock>();
     else if (t == "heat") p = std::make_unique<HeatBlock>();
@@ -25,7 +26,7 @@ std::unique_ptr<BaseBlock> BaseBlock::makeFromEditPayload(const QVariantMap& obj
 
 // ===================== Model impl =====================
 
-BlocksListModel::BlocksListModel(QObject* parent) : QAbstractListModel(parent) {
+VisualCardsModel::VisualCardsModel(QObject* parent) : QAbstractListModel(parent) {
     appendDocument(
         "100.0342.0",
         "Inconel718",
@@ -83,7 +84,7 @@ BlocksListModel::BlocksListModel(QObject* parent) : QAbstractListModel(parent) {
     appendUpset("(1400)->1100->900");
 }
 
-int BlocksListModel::rowCount(const QModelIndex &parent) const {
+int VisualCardsModel::rowCount(const QModelIndex &parent) const {
     return parent.isValid() ? 0 : static_cast<int>(m_blocks.size());
 }
 
@@ -98,13 +99,13 @@ int BlocksListModel::rowCount(const QModelIndex &parent) const {
 
 // Replace usages below:
 
-QVariant BlocksListModel::data(const QModelIndex &index, const int role) const {
+QVariant VisualCardsModel::data(const QModelIndex &index, const int role) const {
 
     if (!checkIndex(index, CheckIndexOption::IndexIsValid)) return {};
 
     // Safe read: bind to const ref, then get()
-    const std::unique_ptr<BaseBlock>& u = m_blocks.at(index.row());
-    BaseBlock* const ptr = u.get();
+    const std::unique_ptr<BaseCard>& u = m_blocks.at(index.row());
+    BaseCard* const ptr = u.get();
     if (!ptr) return {};
 
     if (role == TypeRole)           return ptr->type();
@@ -121,12 +122,12 @@ QVariant BlocksListModel::data(const QModelIndex &index, const int role) const {
     return {};
 }
 
-bool BlocksListModel::setData(const QModelIndex &index, const QVariant &value, int role) {
+bool VisualCardsModel::setData(const QModelIndex &index, const QVariant &value, int role) {
 
     if (!checkIndex(index, CheckIndexOption::IndexIsValid)) return false;
 
     // Read current ptr via const-ref; do not bind non-const ref to avoid copies
-    BaseBlock* ptr = m_blocks.at(index.row()).get();
+    BaseCard* ptr = m_blocks.at(index.row()).get();
     if (!ptr) return false;
 
     bool changed = false;
@@ -138,7 +139,7 @@ bool BlocksListModel::setData(const QModelIndex &index, const QVariant &value, i
         changed = ptr->set(slot, value.toString());
     } else if (role == Qt::EditRole) {
         const auto obj = value.toMap();
-        std::unique_ptr<BaseBlock> newItem = BaseBlock::makeFromEditPayload(obj);
+        std::unique_ptr<BaseCard> newItem = BaseCard::makeFromEditPayload(obj);
         if (!newItem) return false;
         m_blocks[index.row()] = std::move(newItem);   // deletes the old pointee now
         emit dataChanged(index, index, allRoleIds());
@@ -150,11 +151,11 @@ bool BlocksListModel::setData(const QModelIndex &index, const QVariant &value, i
     return changed;
 }
 
-Qt::ItemFlags BlocksListModel::flags(const QModelIndex &index) const {
+Qt::ItemFlags VisualCardsModel::flags(const QModelIndex &index) const {
     return QAbstractListModel::flags(index) | Qt::ItemIsEditable;
 }
 
-QHash<int, QByteArray> BlocksListModel::roleNames() const {
+QHash<int, QByteArray> VisualCardsModel::roleNames() const {
 
     QHash<int, QByteArray> mapping {
             { TypeRole,       "type" },
@@ -181,7 +182,7 @@ QHash<int, QByteArray> BlocksListModel::roleNames() const {
     return mapping;
 }
 // QML helpers
-void BlocksListModel::appendDocument(
+void VisualCardsModel::appendDocument(
     const QString& name,
     const QString& material_id,
     const QString& mesh_elements,
@@ -209,7 +210,7 @@ void BlocksListModel::appendDocument(
     m_blocks.push_back(std::move(d));
     endInsertRows();
 }
-void BlocksListModel::appendBlock(
+void VisualCardsModel::appendBlock(
         const QString& name,
         const QString& press_id,
         const QString& die_assembly_id,
@@ -241,7 +242,7 @@ void BlocksListModel::appendBlock(
     m_blocks.push_back(std::move(b));
     endInsertRows();
 }
-void BlocksListModel::appendHeat(const QString& name, const QString& timeUnits, const QString& typeTimeTemperature) {
+void VisualCardsModel::appendHeat(const QString& name, const QString& timeUnits, const QString& typeTimeTemperature) {
     const int r = static_cast<int>(m_blocks.size());
     beginInsertRows({}, r, r);
     auto h = std::make_unique<HeatBlock>();
@@ -251,7 +252,7 @@ void BlocksListModel::appendHeat(const QString& name, const QString& timeUnits, 
     m_blocks.push_back(std::move(h));
     endInsertRows();
 }
-void BlocksListModel::appendUpset(const QString& operations) {
+void VisualCardsModel::appendUpset(const QString& operations) {
     const int r = static_cast<int>(m_blocks.size());
     beginInsertRows({}, r, r);
     auto u = std::make_unique<UpsetBlock>();
@@ -259,7 +260,7 @@ void BlocksListModel::appendUpset(const QString& operations) {
     m_blocks.push_back(std::move(u));
     endInsertRows();
 }
-void BlocksListModel::appendDraw(const QString& operations) {
+void VisualCardsModel::appendDraw(const QString& operations) {
     const int r = static_cast<int>(m_blocks.size());
     beginInsertRows({}, r, r);
     auto d = std::make_unique<DrawBlock>();
@@ -268,7 +269,7 @@ void BlocksListModel::appendDraw(const QString& operations) {
     endInsertRows();
 }
 
-// bool BlocksListModel::appendRow(const int rowNumber) {
+// bool VisualCardsModel::appendRow(const int rowNumber) {
 //     beginInsertRows(QModelIndex(), rowNumber, rowNumber);
 //
 //     m_types.append(QString{});
@@ -280,7 +281,7 @@ void BlocksListModel::appendDraw(const QString& operations) {
 //     return true;
 // }
 
-void BlocksListModel::removeRowAt(const int row) {
+void VisualCardsModel::removeRowAt(const int row) {
     if (row < 0 || row >= m_blocks.size()) return;
     beginRemoveRows({}, row, row);
     m_blocks.erase(m_blocks.begin() + row);
@@ -288,7 +289,7 @@ void BlocksListModel::removeRowAt(const int row) {
     updateDocumentCache();
 }
 
-bool BlocksListModel::saveToFile() const {
+bool VisualCardsModel::saveToFile() const {
     // Accept both local paths and file URLs
     QString p = QString("C:/Users/alext/OneDrive/Documents/test.json");
     if (p.startsWith("file:/")) {
@@ -315,7 +316,7 @@ bool BlocksListModel::saveToFile() const {
     return true;
 }
 
-bool BlocksListModel::loadFromFile() {
+bool VisualCardsModel::loadFromFile() {
     QString p = QString("C:/Users/alext/OneDrive/Documents/test.json");
     if (p.startsWith("file:/")) {
         const QUrl u(p);
@@ -335,7 +336,7 @@ bool BlocksListModel::loadFromFile() {
     for (const auto& v : arr) {
         const auto o = v.toObject();
         const auto t = o.value("type").toString();
-        std::unique_ptr<BaseBlock> pItem;
+        std::unique_ptr<BaseCard> pItem;
         if (t == "document")   pItem = std::make_unique<DocumentBlock>();
         else if (t == "block") pItem = std::make_unique<BlockBlock>();
         else if (t == "heat")  pItem = std::make_unique<HeatBlock>();
@@ -349,7 +350,7 @@ bool BlocksListModel::loadFromFile() {
     return true;
 }
 
-bool BlocksListModel::setField(const int row, const QString& roleName, const QVariant& value) {
+bool VisualCardsModel::setField(const int row, const QString& roleName, const QVariant& value) {
     int role = -1;
     if (roleName == "a") role = ARole;
     else if (roleName == "b") role = BRole;
@@ -368,7 +369,7 @@ bool BlocksListModel::setField(const int row, const QString& roleName, const QVa
 }
 
 
-bool BlocksListModel::insertRows(const int row, const int count, const QModelIndex &parent) {
+bool VisualCardsModel::insertRows(const int row, const int count, const QModelIndex &parent) {
     beginInsertRows(parent, row, row + count - 1);
 
     // No separate type storage to update
@@ -380,7 +381,7 @@ bool BlocksListModel::insertRows(const int row, const int count, const QModelInd
     return true;
 }
 
-bool BlocksListModel::moveRows(const QModelIndex &sourceParent, const int from, const int count, const QModelIndex &destinationParent, const int to) {
+bool VisualCardsModel::moveRows(const QModelIndex &sourceParent, const int from, const int count, const QModelIndex &destinationParent, const int to) {
     if (count <= 0 || sourceParent != destinationParent) return false;
 
     const int total = static_cast<int>(m_blocks.size());
@@ -411,7 +412,7 @@ bool BlocksListModel::moveRows(const QModelIndex &sourceParent, const int from, 
     return true;
 }
 
-bool BlocksListModel::moveRowTo(const int from, int to) {
+bool VisualCardsModel::moveRowTo(const int from, int to) {
     const int total = static_cast<int>(m_blocks.size());
     if (from < 0 || from >= total || total <= 1 ) return false;
 
@@ -442,7 +443,7 @@ bool BlocksListModel::moveRowTo(const int from, int to) {
     return true;
 }
 
-bool BlocksListModel::removeRows(const int row, const int count, const QModelIndex &parent) {
+bool VisualCardsModel::removeRows(const int row, const int count, const QModelIndex &parent) {
     beginRemoveRows(parent, row, row + count - 1);
 
     for (int i = 0; i < count; ++i) {
@@ -457,7 +458,7 @@ bool BlocksListModel::removeRows(const int row, const int count, const QModelInd
     return true;
 }
 
-bool BlocksListModel::clearModel(const int rowNumber) {
+bool VisualCardsModel::clearModel(const int rowNumber) {
     const int previousRow = rowNumber - 1;
     beginRemoveRows(QModelIndex(), 0, previousRow);
 
@@ -470,7 +471,7 @@ bool BlocksListModel::clearModel(const int rowNumber) {
     return true;
 }
 
-void BlocksListModel::setSelectorSelected(const int row, const QString& roleName, const int value) {
+void VisualCardsModel::setSelectorSelected(const int row, const QString& roleName, const int value) {
     if (row < 0 || row >= m_blocks.size()) return;
     int role = -1;
     if (roleName == "a") role = ASelectedRole;

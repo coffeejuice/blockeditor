@@ -1,4 +1,4 @@
-// BlockDelegate_Footer.qml
+// Card_Footer.qml
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic

@@ -1,21 +1,21 @@
-// blockslistmodel.h
-#ifndef BLOCKSLISTMODEL_H
-#define BLOCKSLISTMODEL_H
+// visualcardsmodel.h
+#ifndef VISUALCARDSMODEL_H
+#define VISUALCARDSMODEL_H
 
 #include <QObject>
 #include <QQmlEngine>
 #include <memory>
 
-#include "blocks.h"
+#include "visualcards.h"
 
-class BlocksListModel : public QAbstractListModel
+class VisualCardsModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT
-    QML_UNCREATABLE("BlocksListModel must be instantinated in C++")
+    QML_UNCREATABLE("VisualCardsModel must be instantinated in C++")
     Q_PROPERTY(QVariantMap document READ documentBegin NOTIFY documentChanged)
 
-    std::vector<std::unique_ptr<BaseBlock>> m_blocks;
+    std::vector<std::unique_ptr<BaseCard>> m_blocks;
     QVariantMap m_documentBegin;
 
     static int slotFromTextFieldRole(const int role) {
@@ -37,7 +37,7 @@ public:
     };
     Q_ENUM(Roles)
 
-    explicit BlocksListModel(QObject *parent = nullptr);
+    explicit VisualCardsModel(QObject *parent = nullptr);
     [[nodiscard]] int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     [[nodiscard]] QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     bool setData(const QModelIndex &index, const QVariant &value, int role) override;
@@ -114,4 +114,4 @@ protected:
     }
 };
 
-#endif // BLOCKSLISTMODEL_H
+#endif // VISUALCARDSMODEL_H

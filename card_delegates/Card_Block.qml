@@ -1,11 +1,11 @@
-// BlockDelegate_Block.qml
+// Card_Block.qml
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 
-import blockeditor
+import cardmix
 
-BlockDelegateLayout {
+Card_BaseLayout {
     id: root
     // required property var listModel
     required property var a

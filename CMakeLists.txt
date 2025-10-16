@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(blockeditor VERSION 0.1 LANGUAGES CXX)
+project(cardmix VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)
@@ -11,25 +11,25 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
-qt_add_executable(appblockeditor
+qt_add_executable(appcardmix
     main.cpp
 )
 
-qt_add_qml_module(appblockeditor
-    URI blockeditor
+qt_add_qml_module(appcardmix
+    URI cardmix
     VERSION 1.0
     QML_FILES
         Main.qml
-        BlocksListView.qml
-        BlockDelegateLayout.qml
-        BlockDelegate_Header.qml
-        BlockDelegate_Document.qml
-        BlockDelegate_Block.qml
-        BlockDelegate_Heat.qml
-        BlockDelegate_Upset.qml
-        BlockDelegate_Draw.qml
-        BlockDelegate_Unknown.qml
-        BlockDelegate_Footer.qml
+        CardsListView.qml
+        card_delegates/Card_BaseLayout.qml
+        card_delegates/Card_Header.qml
+        card_delegates/Card_Document.qml
+        card_delegates/Card_Block.qml
+        card_delegates/Card_Heat.qml
+        card_delegates/Card_Upset.qml
+        card_delegates/Card_Draw.qml
+        card_delegates/Card_Unknown.qml
+        card_delegates/Card_Footer.qml
     RESOURCES
         assets/image0.jpg
         assets/image1.jpg
@@ -64,29 +64,29 @@ qt_add_qml_module(appblockeditor
         assets/square_chamfers_different_off.svg
         assets/square_chamfers_different_on.svg
     SOURCES
-        blockslistmodel.h
-        blockslistmodel.cpp
-        blocks.h
+        visualcardsmodel.h
+        visualcardsmodel.cpp
+        visualcards.h
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
-set_target_properties(appblockeditor PROPERTIES
-#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.appblockeditor
+set_target_properties(appcardmix PROPERTIES
+#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.appcardmix
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
 )
 
-target_link_libraries(appblockeditor
+target_link_libraries(appcardmix
     PRIVATE Qt6::Quick
 )
-target_link_libraries(appblockeditor PRIVATE Qt6::Core)
+target_link_libraries(appcardmix PRIVATE Qt6::Core)
 
 include(GNUInstallDirs)
-install(TARGETS appblockeditor
+install(TARGETS appcardmix
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

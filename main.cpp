@@ -2,13 +2,13 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 
-#include "blockslistmodel.h"
+#include "visualcardsmodel.h"
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
-    BlocksListModel blocksListModel;
+    VisualCardsModel blocksListModel;
 
     QQmlApplicationEngine engine;
     QObject::connect(
@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
         }
     );
 
-    engine.loadFromModule("blockeditor", "Main");
+    engine.loadFromModule("cardmix", "Main");
 
     return app.exec();
 }
