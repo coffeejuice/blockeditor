@@ -21,6 +21,7 @@ qt_add_qml_module(appcardmix
     QML_FILES
         Main.qml
         CardsListView.qml
+        IconsLeftPane.qml
         card_delegates/Card_BaseLayout.qml
         card_delegates/Card_Header.qml
         card_delegates/Card_Document.qml
@@ -41,6 +42,9 @@ qt_add_qml_module(appcardmix
         assets/image7.jpg
         assets/image8.jpg
         assets/image9.jpg
+        assets/document.svg
+        assets/edit.svg
+        assets/find_in_folder.svg
         assets/blocktype_unknown_yellow_inkspace.svg
         assets/fire.svg
         assets/red_danger.svg

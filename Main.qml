@@ -13,6 +13,7 @@ ApplicationWindow {
     title: qsTr("Hello Layouts")
 
     required property VisualCardsModel blocksListModel
+    required property VisualCardsModel iconsListModel
 
     header: TextField {
         id: filterText
@@ -28,6 +29,14 @@ ApplicationWindow {
         Keys.onEscapePressed: {
             focus = false
         }
+    }
+
+    // The main view (ensure it has objectName/id so buttons can access the model)
+    IconsLeftPane {
+        id: iconsListView
+        blocksModel: window.iconsListModel
+        viewInteraction: true
+        title: qsTr("Icons List")
     }
 
     // The main view (ensure it has objectName/id so buttons can access the model)

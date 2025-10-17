@@ -19,16 +19,15 @@ Controls
 Item {
     id: root
 
-    x: 50
     height: parent.height
-    width: parent.width - 50
+    width: 50
 
     required property AbstractItemModel blocksModel
     required property string title
     required property bool viewInteraction
 
     ListView {
-        id: blocksView
+        id: iconsView
 
         anchors.fill: parent
         spacing: 8
@@ -72,20 +71,20 @@ Item {
         move: moveTransition
 
         Keys.onDeletePressed: {
-            if (blocksView.currentIndex >= 0) {
-                let index = blocksView.model.index(blocksView.currentIndex, 0)
-                blocksView.model.removeRows(blocksView.currentIndex, 1, index.parent)
+            if (iconsView.currentIndex >= 0) {
+                let index = iconsView.model.index(iconsView.currentIndex, 0)
+                iconsView.model.removeRows(iconsView.currentIndex, 1, index.parent)
             }
         }
 
         Keys.onEscapePressed: {
-            blocksView.currentIndex = -1
+            iconsView.currentIndex = -1
         }
 
         Keys.onSpacePressed: {
-            if (blocksView.currentIndex >= 0) {
-                let index = blocksView.model.index(blocksView.currentIndex, 0)
-                blocksView.model.setData(index, { "type": "draw", "content": { "operations": "(666)->595->(90)620" } }, Qt.EditRole)
+            if (iconsView.currentIndex >= 0) {
+                let index = iconsView.model.index(iconsView.currentIndex, 0)
+                iconsView.model.setData(index, { "type": "draw", "content": { "operations": "(666)->595->(90)620" } }, Qt.EditRole)
             }
         }
 
@@ -94,21 +93,21 @@ Item {
         }
 
         Keys.onDigit2Pressed: {
-            blocksView.model.clearModel(blocksView.count)
+            iconsView.model.clearModel(iconsView.count)
         }
 
         Keys.onUpPressed: {
-            if (blocksView.count > 1 || blocksView.currentIndex > 0) {
-                if (blocksView.model.moveRowTo(blocksView.currentIndex, blocksView.currentIndex - 1)) {
-                    blocksView.currentIndex = Math.max(0, blocksView.currentIndex - 1)
+            if (iconsView.count > 1 || iconsView.currentIndex > 0) {
+                if (iconsView.model.moveRowTo(iconsView.currentIndex, iconsView.currentIndex - 1)) {
+                    iconsView.currentIndex = Math.max(0, iconsView.currentIndex - 1)
                 }
             }
         }
 
         Keys.onDownPressed: {
-            if (blocksView.count > 1 || blocksView.currentIndex < (blocksView.count - 1)) {
-                if (blocksView.model.moveRowTo(blocksView.currentIndex, blocksView.currentIndex + 1)) {
-                    blocksView.currentIndex = Math.min(blocksView.count - 1, blocksView.currentIndex + 1)
+            if (iconsView.count > 1 || iconsView.currentIndex < (iconsView.count - 1)) {
+                if (iconsView.model.moveRowTo(iconsView.currentIndex, iconsView.currentIndex + 1)) {
+                    iconsView.currentIndex = Math.min(iconsView.count - 1, iconsView.currentIndex + 1)
                 }
             }
         }
@@ -172,9 +171,9 @@ Item {
                     enabled: ((firstNameField.text !== "") && (lastNameField.text !== "") && (ageField.text !== "") && (phoneField.text !== ""))
 
                     onClicked: {
-                        blocksView.model.appendRow(blocksView.count)
-                        let index = blocksView.model.index(blocksView.count - 1, 0)
-                        blocksView.model.setData(index, "%1, %2, %3, %4"
+                        iconsView.model.appendRow(iconsView.count)
+                        let index = iconsView.model.index(iconsView.count - 1, 0)
+                        iconsView.model.setData(index, "%1, %2, %3, %4"
                                                    .arg(firstNameField.text).arg(lastNameField.text)
                                                    .arg(ageField.text).arg(phoneField.text))
                         newValuePopup.close()
@@ -197,7 +196,7 @@ Item {
             border.color: "green"
             // color: "yellow"
             opacity: 0.0
-            z: root.viewInteraction ? (blocksView.z + 2) : 0
+            z: root.viewInteraction ? (iconsView.z + 2) : 0
         }
     }
 
