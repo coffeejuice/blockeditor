@@ -67,6 +67,11 @@ qt_add_qml_module(appcardmix
         assets/square_chamfers_equal_on.svg
         assets/square_chamfers_different_off.svg
         assets/square_chamfers_different_on.svg
+        assets/feather.svg
+        assets/pencil.svg
+        assets/folder.svg
+        assets/folder_search.svg
+        assets/house.svg
     SOURCES
         visualcardsmodel.h
         visualcardsmodel.cpp
