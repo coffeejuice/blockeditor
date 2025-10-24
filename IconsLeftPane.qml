@@ -11,8 +11,7 @@ Item {
     height: parent.height
     width: 50
 
-    required property AbstractItemModel blocksModel
-    required property string title
+    required property AbstractItemModel iconsModel
     required property bool viewInteraction
 
     ListView {
@@ -27,29 +26,42 @@ Item {
         property int lastItem: itemAtIndex(count - 1) ? (itemAtIndex(count - 1).height ? itemAtIndex(count - 1).height : 0) : 0
 
         signal requestMove(int sourceIndex, int destinationIndex)
-
         signal requestCopy(int sourceIndex, int destinationIndex)
 
         Component {
             id: button
             MouseArea {
-                height: 40
+                id: maID
+
+                required property string buttonFile
+                required property string buttonLabel
+
+                height: 35
                 width: root.width
                 Rectangle {
-                    x: 2
-                    y: 2
-                    height: parent.width - 4
-                    width: parent.width - 4
-                    color: "gray"
-                }
-                Image {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    height: 18
-                    width: 18
-                    y: 2
-                    source: Qt.resolvedUrl("../assets/" + file_name)
-                    smooth: true
-                    antialiasing: true
+                    x: 1; y: 1
+                    height: parent.width - 2
+                    width: parent.width - 2
+                    radius: 2
+                    color: "tranparent"
+                    border:
+
+                    Image {
+                        id: buttonImage
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        y: 1
+                        height: 18
+                        width: 18
+                        source: Qt.resolvedUrl("../assets/" + maID.buttonFile)
+                        smooth: true
+                        antialiasing: true
+                    }
+
+                    Label {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        y: 1 + 18 + 2
+                        text: qsTr(maID.buttonLabel)
+                    }
                 }
             }
         }
@@ -69,7 +81,7 @@ Item {
         Rectangle {
             id: highlightRect
 
-            border.color: "green"
+            border.color: "gray"
             // color: "yellow"
             opacity: 0.0
             z: root.viewInteraction ? (iconsView.z + 2) : 0
