@@ -12,7 +12,7 @@ ApplicationWindow {
     visible: true
     title: qsTr("Hello Layouts")
 
-    required property VisualCardsModel blocksListModel
+    required property VisualCardsModel cppCardsListModel
     required property VisualCardsModel iconsListModel
 
     header: TextField {
@@ -42,7 +42,7 @@ ApplicationWindow {
     // The main view (ensure it has objectName/id so buttons can access the model)
     CardsListView {
         id: blocksListView
-        blocksModel: window.blocksListModel
+        blocksModel: window.cppCardsListModel
         viewInteraction: true
         title: qsTr("Blocks List")
     }

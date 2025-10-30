@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
-    VisualCardsModel blocksListModel;
+    VisualCardsModel model;
 
     QQmlApplicationEngine engine;
     QObject::connect(
@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 
     engine.setInitialProperties(
         {
-            {"blocksListModel", QVariant::fromValue(&blocksListModel)},
+            {"cppCardsListModel", QVariant::fromValue(&model)},
         }
     );
 
