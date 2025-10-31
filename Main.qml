@@ -1,49 +1,17 @@
-// Main.qml
-pragma ComponentBehavior: Bound
 import QtQuick
-import QtQuick.Controls.Basic
-import QtCore
-import cardmix
+import QtQuick.Controls
 
-ApplicationWindow {
-    id: window
-    width: 500
-    height: 1000
+Window {
+    id: root
+    width: 1000
+    height: 800
     visible: true
-    title: qsTr("Hello Layouts")
+    title: qsTr("3-level model ListView->Flow->TextFields")
 
-    required property VisualCardsModel cppCardsListModel
-    required property VisualCardsModel iconsListModel
+    required property CardsModel cardsModel
 
-    header: TextField {
-        id: filterText
-
-        placeholderText: qsTr("Enter a block type name")
-        text: "" // window.filterModel.lastName
-        font.pointSize: 18
-        onEditingFinished: {
-            focus = false
-            // window.filterModel.lastName = text
-        }
-
-        Keys.onEscapePressed: {
-            focus = false
-        }
-    }
-
-    // The main view (ensure it has objectName/id so buttons can access the model)
-    IconsLeftPane {
-        id: iconsListView
-        blocksModel: window.iconsListModel
-        viewInteraction: true
-        title: qsTr("Icons List")
-    }
-
-    // The main view (ensure it has objectName/id so buttons can access the model)
-    CardsListView {
-        id: blocksListView
-        blocksModel: window.cppCardsListModel
-        viewInteraction: true
-        title: qsTr("Blocks List")
+    CardsView {
+        anchors.fill: parent
+        model: root.cardsModel
     }
 }
