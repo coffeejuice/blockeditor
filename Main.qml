@@ -8,9 +8,9 @@ Window {
     visible: true
     title: qsTr("Nested Flow")
 
-    required property cardModel aliasCardModel
+    required property CardModel cardModel
 
     CardView {
-        cardViewModel: aliasCardModel
+        cardModelAlias: cardModel
     }
 }

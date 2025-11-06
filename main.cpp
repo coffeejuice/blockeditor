@@ -16,12 +16,12 @@ int main(int argc, char *argv[])
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
 
-    CardModel model;
+    CardModel m;
     engine.setInitialProperties({
-        {"cardModel", QVariant::fromValue(&model)}
+        {"cardModel", QVariant::fromValue(&m)}
     });
 
-    engine.loadFromModule("temp_qt_quick_nested_flow", "Main");
+    engine.loadFromModule("cardmix", "Main");
 
     return app.exec();
 }

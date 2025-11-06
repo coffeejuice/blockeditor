@@ -6,7 +6,7 @@ import QtQuick.Layouts
 Item {
     id: root
     anchors.fill: parent
-    required property CardModel cardViewModel
+    required property CardModel cardModelAlias
 
     Column {
         id: leftPannel
@@ -28,16 +28,16 @@ Item {
         spacing: 6
         focus: true
         highlight: Rectangle {color: Qt.rgba(0,0,0,0.06)}
-        model: cardViewModel
+        model: cardModelAlias
         delegate: DelegateChooser {
             role: "cardType"
-            DelegateChoice { roleValue: root.cardViewModel.IMAGE;    delegate: Draw {} }
-            DelegateChoice { roleValue: root.cardViewModel.GRAPHIC;    delegate: Draw {} }
-            DelegateChoice { roleValue: root.cardViewModel.PROCESS;    delegate: Draw {} }
-            DelegateChoice { roleValue: root.cardViewModel.HEAT;    delegate: Draw {} }
-            DelegateChoice { roleValue: root.cardViewModel.FORMING;    delegate: Draw {} }
-            DelegateChoice { roleValue: root.cardViewModel.UPSET;    delegate: Draw {} }
-            DelegateChoice { roleValue: root.cardViewModel.DRAW;    delegate: Draw {} }
+            DelegateChoice { roleValue: CardModel.IMAGE;      delegate: Draw {} }
+            DelegateChoice { roleValue: CardModel.GRAPHIC;    delegate: Draw {} }
+            DelegateChoice { roleValue: CardModel.PROCESS;    delegate: Draw {} }
+            DelegateChoice { roleValue: CardModel.HEAT;       delegate: Draw {} }
+            DelegateChoice { roleValue: CardModel.FORMING;    delegate: Draw {} }
+            DelegateChoice { roleValue: CardModel.UPSET;      delegate: Draw {} }
+            DelegateChoice { roleValue: CardModel.DRAW;       delegate: Draw {} }
         }
     }
 }
