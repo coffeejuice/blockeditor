@@ -53,16 +53,16 @@ CardModel::Graphic::Graphic() {
     setCardType(GRAPHIC);
 }
 
-CardModel::Process::Process() {
-    setCardType(PROCESS);
+CardModel::Document::Document() {
+    setCardType(DOCUMENT);
 }
 
 CardModel::Heat::Heat() {
     setCardType(HEAT);
 }
 
-CardModel::Forming::Forming() {
-    setCardType(FORMING);
+CardModel::Block::Block() {
+    setCardType(BLOCK);
 }
 
 CardModel::Upset::Upset() {

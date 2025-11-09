@@ -18,7 +18,7 @@ public:
 
 public:
     enum Roles {CardTypeRole=Qt::UserRole+1, CellModelRole};
-    enum CardType { IMAGE=CellModelRole+1, GRAPHIC, PROCESS, HEAT, FORMING, UPSET, DRAW};
+    enum CardType { IMAGE=CellModelRole+1, GRAPHIC, DOCUMENT, BLOCK, HEAT, UPSET, DRAW};
     Q_ENUM(CardType);
 
     CardModel();
@@ -39,6 +39,8 @@ public:
         void setCardType(const enum CardType type);
         void setCellModel(CellModel* m);
     public:
+        enum CardTypeInternal { IMAGE_, GRAPHIC_, DOCUMENT_, BLOCK_, HEAT_, UPSET_, DRAW_ };
+        Q_ENUM(CardTypeInternal)
         enum CardType cardType() const;
         virtual CellModel* cellModel() const;
     };
@@ -53,19 +55,19 @@ public:
         Graphic();
     };
 
-    class Process : public BaseCard {
+    class Document : public BaseCard {
     public:
-        Process();
+        Document();
+    };
+
+    class Block : public BaseCard {
+    public:
+        Block();
     };
 
     class Heat : public BaseCard {
     public:
         Heat();
-    };
-
-    class Forming : public BaseCard {
-    public:
-        Forming();
     };
 
     class Upset : public BaseCard {

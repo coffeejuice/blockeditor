@@ -33,9 +33,9 @@ Item {
             role: "cardType"
             DelegateChoice { roleValue: CardModel.IMAGE;      delegate: Draw {} }
             DelegateChoice { roleValue: CardModel.GRAPHIC;    delegate: Draw {} }
-            DelegateChoice { roleValue: CardModel.PROCESS;    delegate: Draw {} }
+            DelegateChoice { roleValue: CardModel.DOCUMENT;   delegate: Draw {} }
+            DelegateChoice { roleValue: CardModel.BLOCK;      delegate: Draw {} }
             DelegateChoice { roleValue: CardModel.HEAT;       delegate: Draw {} }
-            DelegateChoice { roleValue: CardModel.FORMING;    delegate: Draw {} }
             DelegateChoice { roleValue: CardModel.UPSET;      delegate: Draw {} }
             DelegateChoice { roleValue: CardModel.DRAW;       delegate: Draw {} }
         }
