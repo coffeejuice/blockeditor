@@ -2,6 +2,7 @@
 #include <QQmlApplicationEngine>
 #include "cardmodel.h"
 
+// TODO: Header of GUI table 'process' are given in 'process_headers' of 'forgelab'
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
